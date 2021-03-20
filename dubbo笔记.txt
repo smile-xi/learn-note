@@ -1,0 +1,171 @@
+实例部分：
+	1.服务提供者直连消费者 （01-link-userservice-provider 和 01-link-consumer）
+		注意点：使用dubbo时，实体bean必须实现序列化接口
+
+	2.服务提供者直连消费者，但是两者之间加了一个接口工程。（02-link-consumer、02-link-interface、02-link-userservice-provider）
+
+	3.使用zookeeper注册中心将服务提供者和消费者连接起来（03-zookeeper-consumer、03-zookeeper-interface、03-zookeeper-userservice-provider）
+
+	4.为同一个接口不同的实现类加上版本号（04-zk-consumer、04-zk-interface、04-zk-provider）
+
+笔记部分：
+1.什么是分布式框架
+	分布式系统是若干独立系统的集合，但是用户使用起来像是在使用一套系统。
+
+2.dubbo是什么？
+	dubbo是一个高性能的RPC框架，解决了分布式中的调用问题。
+	既然是一个RPC框架，主要干的就是远程方法调用，那么提升性能就要从最关键、最耗时的两个方面入手：序列化和网络通信。
+
+	Apache Dubbo是一款高性能、轻量级的开源java RPC框架，它提供了三大核心能力：面向接口的远程方法调用，
+	智能容错和负载均衡，以及服务自动注册和发现。
+
+3.dubbo支持的协议
+	支持多种协议：dubbo、hessian、rmi、http、webservice、thrift、memcached、redis。
+	dubbo官方推荐使用dubbo协议。dubbo协议默认端口20880
+
+	使用dubbo协议，spring配置文件加入：
+	<dubbo:protocol name="dubbo" port="20880"/>
+
+4.使用dubbo需要加入依赖
+	dubbo依赖：
+		    <dependency>
+		      <groupId>com.alibaba</groupId>
+		      <artifactId>dubbo</artifactId>
+		      <version>2.6.2</version>
+		    </dependency>
+
+5.dubbo的核心配置文件（直连，不使用注册中心）
+	因为dubbo是直连spring的，所以dubbo的核心配置文件也和spring核心配置文件一样。
+	服务提供者需要在dubbo核心配置文件中配置以下四个步骤：
+		1.
+			<!-- 服务提供者声明名称：必须保证服务名称的唯一性，它的名称是dubbo内部使用的唯一标识 -->
+			<dubbo:application name="01-link-userservice-provide"/>
+
+		2.
+			<!-- 访问服务协议的名称及端口号，dubbo官方推荐使用的是dubbo协议，端口号默认为20880
+				    name:指定协议的名称
+				    port:指定协议的端口号
+			    -->
+			    <dubbo:protocol name="dubbo" port="20880"/>
+
+		3.
+			<!-- 暴露服务接口
+				    interface:暴露服务接口的全限定类目
+				    ref：接口的实现类对象在spring容器中的标识
+				    registry：如果不使用注册中心，则值为"N/A"
+			    -->
+			    <dubbo:service interface="com.bjpowernode.service.UserService" ref="userService" registry="N/A"/>
+
+		4.
+			<!-- 创建业务接口的实现类对象 -->
+			 <bean id="userService" class="com.bjpowernode.dubbo.service.impl.UserServiceImpl"/>
+
+
+	服务消费者需要在dubbo核心配置文件中配置以下两个步骤：
+		1.
+			<!-- 声明消费者名称 -->
+			<dubbo:application name="02-link-consumer"/>
+
+		2.
+			 <!-- 引用远程接口服务
+				interface:引用的接口的全限定类名
+				registry:连接方式，N/A代表直连
+				url：dubbo的连接路径
+				id：服务的标识
+			     -->
+			    <dubbo:reference id="userService"
+					     interface="com.bjpowernode.dubbo.service.UserService"
+					     registry="N/A"
+					     url="dubbo://localhost:20880"/>
+
+	
+	注意：不管是服务提供者还是服务消费者，在dubbo核心配置文件中引入的dubbo包一定要是"http://dubbo.apache.org/schema/dubbo"
+	      因为现在dubbo已经是apache来维护和更新了。
+
+6.dubbo服务最佳化
+	1.分包
+		建议将服务接口、服务模型等均放在公共包中。
+
+	2.粒度
+		- 服务接口尽可能大粒度，每个服务方法应代表一个功能，而不是某功能的一个步骤。
+		- 服务接口建议以业务场景为单位划分，并对相近业务做抽象，防止接口数量爆炸。
+		- 不建议使用过于抽象的通用接口，如：Map query(Map),这样的接口没有明确指定map集合中有哪类参数，会给后期维护带来不便。
+		
+	3.版本
+		每个接口都应定义版本号，区分同一接口的不同实现。
+		如：<dubbo:service interface="xxx.xxx.xxxService" version="1.0"/>
+
+7.Zookeeper注册中心
+	zookeeper依赖：
+		<!-- zookeeper依赖 -->
+		    <dependency>
+		      <groupId>org.apache.curator</groupId>
+		      <artifactId>curator-framework</artifactId>
+		      <version>4.1.0</version>
+		    </dependency>
+	
+	使用注册中心后，dubbo的核心配置文件需要一些改动。
+	服务提供者，需要声明注册中心：
+		    <!-- 声明服务提供者名称 -->
+		    <dubbo:application name="03-zookeeper-userservice-provider"/>
+
+		    <!-- 设置访问协议和端口号 -->
+		    <dubbo:protocol name="dubbo" port="20880"/>
+
+		    <!-- 使用zookeeper注册中心 -->
+		    <!-- 指定注册中心地址和端口号 -->
+		    <dubbo:registry address="zookeeper://localhost:2181"/>
+
+		    <!-- 暴露服务接口 -->
+		    <dubbo:service interface="com.bjpowernode.dubbo.service.UserService" ref="userService"/>
+
+		    <!-- 创建接口实现类bean -->
+		    <bean id="userService" class="com.bjpowernode.dubbo.service.impl.UserServiceImpl"/>
+
+	服务消费者，需要指定注册中心：
+		    <!-- 声明服务消费者名称 -->
+		    <dubbo:application name="03-zookeeper-consumer"/>
+
+		    <!-- 指定注册中心 -->
+		    <dubbo:registry address="zookeeper://localhost:2181"/>
+
+		    <!-- 引用远程接口服务 -->
+		    <dubbo:reference id="userService" interface="com.bjpowernode.dubbo.service.UserService"/>
+		
+8.版本号
+	同一个接口可以有多个实现类，那么怎么将这多个实现类区分开呢？
+	使用版本号。
+	注意：不管这个接口是否有多个实现类，只要服务提供者提供接口服务的时候指定了版本号，那么消费者引用远程接口服务的时候就必须指定版本号。
+
+	如何使用：
+		在服务提供者暴露接口的时候，给这个服务添加一个版本号，例如：
+		    <!-- 暴露两个版本的服务 -->
+		    <dubbo:service interface="com.bjpowernode.dubbo.service.UserService" ref="userServiceImpl1" version="1.0.0"/>
+		    <dubbo:service interface="com.bjpowernode.dubbo.service.UserService" ref="userServiceImpl2" version="2.0.0"/>
+
+		    <!-- 创建接口实现类bean -->
+		    <bean id="userServiceImpl1" class="com.bjpowernode.dubbo.service.impl.UserServiceImpl1"/>
+		    <bean id="userServiceImpl2" class="com.bjpowernode.dubbo.service.impl.UserServiceImpl2"/>
+
+		消费者引用远程服务时，需要指定服务的版本号，例如：
+			    <!-- 引用远程接口服务,并指定版本号 -->
+			    <dubbo:reference id="userService1"
+					     interface="com.bjpowernode.dubbo.service.UserService"
+					     version="1.0.0"/>
+
+			    <dubbo:reference id="userService2"
+					     interface="com.bjpowernode.dubbo.service.UserService"
+					     version="2.0.0"/>
+
+
+9.监控中心
+	dubbo的使用，其实只需要有注册中心、消费者、提供者三个就可以使用了，但是并不能看到有哪些消费者和提供者，
+	为了更好的调试，发现问题，解决问题，因此引入 dubbo-admin 。通过 dubbo-admin 可以对消费者和提供者进行
+	管理，可以在dubbo应用部署做动态的调整，服务的管理。
+
+	dubbo监控中心是dubbo官方提供的，只需要下载再编译就能使用了。
+
+
+	
+
+	

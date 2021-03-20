@@ -1,0 +1,638 @@
+mybatis
+
+0.使用mybatis的基本步骤：
+	1.加入mybatis在maven中的依赖。
+	2.创建Dao接口：定义了你操作数据的方法。 注意：定义的方法必须是唯一的，不要有重载的方法。
+	3.创建mapper文件，也叫做sql映射文件：用来写和接口中方法对应的sql语句的。
+	4.创建mabatis的一个主配置文件：
+				(1)连接数据库; 
+				(2)指定mapper文件的位置
+	5.使用mybatis的对象 SqlSession，通过它的getMapper()方法获取dao接口的实现类对象来执行操作数据的方法。
+
+
+1.三层架构
+	界面层：和用户打交道，接受用户的请求参数，显示处理结果。（jsp、html、servlet）
+	业务逻辑层：接收了界面层传递的数据，计算逻辑，调用数据库，获取数据。
+	数据访问层：访问数据库，执行对数据的查询，修改，删除等等。
+
+	三层对应的包
+		界面层：controller包（servlet）
+		业务逻辑层：service包
+		数据访问层：dao包
+
+	三层中类的交互
+		用户使用界面层--->业务逻辑层--->数据访问层（持久层）--->数据库
+
+	三层对应的处理框架
+		界面层-----servlet----springmvc（框架）
+		业务逻辑层----service类----spring（框架）
+		数据访问层----dao类----mybatis（框架）
+	
+2.jdbc的缺点
+	1.代码比较多，开发效率低。
+	2.需要关注Connection，Statement，ResultSet对象的创建和销毁。
+	3.对Resultset查询的结果，需要自己封装为List。
+	4.重复的代码比较多。
+	5.业务代码和数据库的操作混在一起。
+
+3.mybatis框架的介绍
+	一个框架，早期叫做ibatis，代码在geihub上。
+	mybatis是 MyBatis SQL Mapper Framework for Java（sql映射框架）
+	mybatis的两大功能：
+		1.sql mapper：sql映射
+			可以把数据库表中的一行数据映射为一个java对象，一行数据可以看作是一个java对象。
+			操作这个对象就相当于操作表中的数据。
+
+		2.Date Access Object（DAOs）：数据访问，对数据库执行增删改查。
+
+	mybatis提供了哪些功能：
+		1.提供了创建Connection、Statement、ResultSet的能力，不用我们开发人员自己创建这些对象了。
+		2.提供了执行sql语句的能力，不用自己执行sql。
+		3.提供了循环sql，把sql的结果转为java对象或List集合的能力。
+		4.提供了关闭资源的能力，不需要自己关闭Connection、Statement等资源了。
+
+		那么我们开发人员做什么呢？
+			提供sql语句。
+			开发人员提供sql语句--->Mybatis处理sql--->开发人员得到List集合或java对象（表中的数据）
+
+	总结：
+	 Mybatis是一个sql映射框架，提供了数据库的操作能力。就好比增强版的JDBC，
+	 使用Mybatis可以让开发人员集中精神写sql就可以了，不必关心sql语句的执行以及Connection等资源的创建和销毁了。
+
+4.mybatis的sql映射文件（mapper文件）
+	- sql映射文件：写sql语句的，mybatis会执行这些sql
+	基本结构：
+		<?xml version="1.0" encoding="UTF-8" ?>
+		<!DOCTYPE mapper
+			PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+			"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+		<mapper namespace="dao接口的全限定名称">
+		 
+		</mapper>
+
+	例如：
+		<?xml version="1.0" encoding="UTF-8" ?>
+		<!DOCTYPE mapper
+			PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+			"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+		<mapper namespace="com.bjpowernode.dao.StudentDao">
+		    <!--
+			select：表示查询操作
+			id:你要执行的sql语法的唯一标识，mybatis会根据这个
+			   唯一标识来找到需要执行的sql语句，可以自定义，
+			   但是推荐使用接口中的方法名称。
+			resultType：表示结果类型的，是sql语句执行后得到的java对象的类型
+				    值写类型的全限定名称。
+		    -->
+		    <select id="selectStudent" resultType="com.bjpowernode.domain.Student">
+		 select * from student order by id
+		 </select>
+		</mapper>
+
+5.mybatis的事务提交方式（重点）
+	mybatis默认不提交事务，所以在inser、update、delete后需要手动提交事务才能更改数据。
+	操作：sqlSession.commit();
+
+6.配置日志功能
+	mybatis.xml文件加入日志配置，可以在控制台输入执行的sql语句和参数。
+	操作：
+		<settings>
+			<setting name="logImpl" value="STDOUT_LOGGING"/>
+		</settings>
+
+7.mybatis的insert操作
+	mapper文件：
+		<insert id="insertStudent">
+			insert into student values(#{id},#{name},#{email},#{age})
+		</insert>
+
+		mybatis的插入操作在mapper文件中需要以 #{需插入的数据名称} 来表示插入的数据。
+
+	主测试文件：
+		String sql="com.bjpowernode.dao.StudentDao.insertStudent";
+		int i=sqlSession.insert(sql,student);
+		System.out.println("执行insert语句共影响了"+i+"条数据");
+		sqlSession.commit();
+
+		student为一个对象，这个insert操作把student对象的 id值、name值、email值、age值 
+		传入了sql语句中对应的位置：#{id},#{name},#{email},#{age}。
+		注意：mybatis默认不提交事务，所以在inser、update、delete后需要手动提交事务才能更改数据。
+
+8.mybatis的update操作
+
+9.mybatis的delete操作
+
+10.mybatis的select操作
+	mapper文件：
+		<select id="selectStudent" resultType="com.bjpowernode.domain.Student">
+			select * from student order by id
+		</select>
+	主测试文件：
+		String id="com.bjpowernode.dao.StudentDao.selectStudent";
+		//执行sql语句，通过id找到语句
+		List<Student> studentList=sqlSession.selectList(id);
+		//输出结果
+		for (Student stu:studentList){
+		    System.out.println("-----"+stu+"-----");
+		}
+
+11.主要的类的介绍
+	1.Resources
+		作用：mybatis中的一个类，负责读取主配置文件。例如：
+		//1.读取主配置文件
+		InputStream in=Resources.getResourceAsStream("mybatis.xml");
+
+	2.SqlSessionFactoryBuilder
+		作用：用来创建SqlSessionFactoryBuilder对象，再通过这个对象创建出SqlSessionFactory对象。例如：
+		//2.创建sqlSessionFactoryBuilder对象
+		SqlSessionFactoryBuilder builder=new SqlSessionFactoryBuilder();
+		//3.创建SqlSessionFactory对象
+		SqlSessionFactory factory=builder.build(in);
+
+	3.SqlSessionFactory：重量级对象，在整个项目中有一个就够用了。
+		作用：用来获取SqlSession对象。例如：
+			//4.【重要】从SqlSessionFactory中获取SqlSession对象
+			SqlSession sqlSession=factory.openSession();
+		
+		openSession()方法说明：
+			1.openSession()：无参数的，获取非自动提交事务的SqlSession对象
+			2.openSession(boolean)：openSession(true)获取自动提交事务的SqlSession对象，
+						openSession(false)获取非自动提交事务的SqlSession对象。
+
+	4.SqlSession
+		SqlSession接口：定义了操作数据的方法 例如：selectOne()、selectList()、insert()、update()、
+							   delete()、commit()、rollback()
+
+		SqlSession接口的实现类：DefaultSqlSession。
+
+		使用要求：SqlSession对象不是线程安全的，需要在方法内部使用，在执行sql语句之前，使用openSession()获取
+			  SqlSession对象，在执行完sql语句之后，需要关闭它，执行sqlSession.close()。这样就能保证它的使用
+			  是线程安全的。
+
+12.mybatis的动态代理（重点）（实例 03）
+	mybatis根据dao方法调用，可以获取sql语句的信息。
+	mybatis能根据你的接口，创建出这个接口的实现类，并创建这个类的对象，完成SqlSession的方法调用，访问数据库。
+	使用SqlSession.getMapper(dao接口.class)能获取dao接口对应的实现类对象。例如：
+		StudentDao dao=sqlSession.getMapper(StudentDao.class);
+
+	原理：mybatis使用了jdk的动态代理机制，从而创建了dao接口的实现类对象。
+
+13.传入参数（重点）（实例 04）
+	从java代码中把数据传入到mapper文件的sql语句中。
+	1.parameterType：写在mapper文件中的一个属性，表示dao接口中方法的参数的数据类型。
+			  parameterType它的值是java的数据类型全限定名称，或者是mybatis定义的别名。
+			  例如：
+				<select id="selectStudentById" parameterType="java.lang.Integer" resultType="com.bjpowernode.domain.Student">
+					select * from student where id=#{id}
+				 </select>
+
+			注意：parameterType不是强制的，mybatis通过反射机制能够发现接口中参数的数据类型，
+				 所以可以没有，一般我们也不写。
+
+	2.传入多个参数(多种方法)
+		1.（必会）使用 @Param命名参数，在形参定义的前面加入 @Param("自定义参数名")，用法：
+				@Param("参数名") String name
+			例如：
+				接口：
+					Public List<Student> selectMultiParam(@Param("myname") String name, @Param("myage") Integer age);
+				mapper文件：
+					<select>
+						select * from student where nmae=#{myname} or age=#{myage}
+					</select>
+
+		2.（必会）使用对象传参的方式
+			使用java对象的属性值，作为参数实际值
+			用法：
+				#{对象的属性名,javaType=类型名称,jdbcType=数据类型} （最完整的语法格式，但很少用）
+				javaType：指java中的属性数据类型。
+				jdbcType：在数据库中的数据类型。
+				例如：
+					#{paramName,javaType=java.lang.String,jdbcType=VARCHAR}
+
+				
+				上面的语法一般不用，过于麻烦，但是需要了解。
+				我们一般使用简化的方式：#{对象的属性名}    ,mybatis可以通过反射获取javaType和jdbcType的值，所以不用提供。
+				例如：
+					#(paramName)
+
+		3.（了解）按照参数位置进行传参
+			位置的下标从0开始。
+			注意：在mybatis-3.3以及之前的版本中使用#{0},#{1}的方式，
+			      从mybatis-3.4开始使用#{arg0},#{arg1}的方式。
+			例如：	
+				接口：
+					public List<Student> selectStudentList(String name,Integer age);
+				mapper文件：
+					<select>
+						select * from student where name=#{arg0} or age=#{arg1}
+					</select>
+
+		4.（了解）使用map集合进行传参
+			使用map集合的对象传参，key代表需插入的自定义参数名，value代表对应参数的值。
+			用法：#{map的key}
+			例如：
+				接口：
+					public int insertStudent(Map<String,Object> map);
+				mapper文件：
+					<insert id="insertStudent">
+						insert into student values (#{myId},#{myName},#{myEmail},#{myAge})
+					</insert>
+				测试文件：
+					Map<String,Object> map=new HashMap<>();
+					map.put("myId",1007);
+					map.put("myName","老阳");
+					map.put("myEmail","111laoyang@qq.com");
+					map.put("myAge",20);
+					SqlSession sqlSession=MyBatisUtils.getSqlSession();
+					StudentDao dao=sqlSession.getMapper(StudentDao.class);
+					int i=dao.insertStudent(map);
+
+14.#和$ 两个占位符比较
+	#代表sql语句中的问号(?) 例如：
+		select * from student where id=#{id} 代表 select * from student where id=?
+
+	$使用的是在sql语句中用字符串拼接的方式传参，例如：
+		dao.selectStudentById(1001);  //给接口传递参数
+		此时sql语句中不使用 ? 作为占位符，而是直接将参数以字符串拼接的方式传进去
+		select * from student where id=${id} 代表 select * from student where id=1001
+		这样做将会出现sql注入的问题，并且效率低。
+
+		那么$的用处是什么？
+			$可以替换表名或者列名，也可以用来确认数据是否安全。
+
+15.$的使用（实例 04）
+	在我们需要使用 order by 排序的时候，可以使用${};
+	例如：
+		select * from student order by ${myname}
+		此时我们可以随意更改需要排序的列名，比如按name排序、按age排序等等都不会有影响
+		因为此时的sql语句为 select * from student order by name 或 select * from student order by age 等等 
+
+	在我们需要替换表名的时候，也可以使用${}，这样都不会有影响
+	例如：
+		select * from ${table}
+		此时可以更改表名来查询不同的表。
+
+16.#和$的区别
+	1.#使用 ? 在sql语句中做占位符，使用PreparedStatement执行sql，效率高。
+	2.#可以避免sql注入，更安全。
+	3.$不使用占位符，是字符串连接的方式，使用Statement执行sql，效率低。
+	4.$有sql注入的风险，缺乏安全性。
+	5.$可以替换列名或表名。
+
+17.mybatis的输出结果（实例 05）
+	mybatis执行了sql语句，得到java对象。
+	1.resultType（结果类型）：指sql语句执行完毕之后，数据转为java对象，java对象的类型是任意的。
+		     处理方式：
+			- mybatis执行sql语句，然后mybatis调用类的无参数构造方法，创建对象。
+			- mybatis把ResultSet指定的列值赋给同名的属性。
+
+	  resultType结果类型的值：1.类的全限定名称。2.类型的别名，例如：java.lang.Integer的别名是int。
+
+	2.自定义类型的别名
+		1.在mybatis主配置文件中定义，使用<typeAlias>定义别名。
+		2.可以在resultType中使用自定义的别名。
+	   一个类型可以指定一个自定义别名。
+	   第一种方式：
+		   type:自定义类型的全限定名称。
+		   alias:自定义的别名
+		   例如：
+			<typeAliases>
+				<typeAlias type="com.bjpowernode.domain.Student" alias="stu"></typeAlias>
+			</typeAliases>
+
+	   第二种方式：
+		      <package> name是包名，这个包中的所有类，类名就是别名（类名不区分大小写）
+		      例如：
+			<package name="com.bjpowernode.domain"/>
+
+18.sql查询结果使用map返回（实例 05）
+	将查询结果以map集合的方式返回。注意：只能返回一行数据，如果多行会报错。
+	key是列名，value为列值。
+	例如：
+		dao接口：
+			 //定义一个返回map集合的方法
+			 public Map<Object,Object> selectMapById(Integer id);
+
+		mapper文件：
+			<select id="selectMapById" resultType="java.util.HashMap">
+				select * from student where id=#{id}
+			</select>
+
+		test文件：
+			Map<Object,Object> studentMap=dao.selectMapById(1005);
+			System.out.println("map:"+studentMap);
+
+19.resultMap：结果映射，指定列名和java对象的属性对应关系。（实例 05）
+	用处：
+		1.可以自定义列值赋给哪个属性。
+		2.当你的列名和属性名不一样时，一定使用resultMap。
+
+	用法：
+		使用resultMap
+		1.先定义resultMap
+		2.在select标签中引用定义的resultMap
+
+		定义resultMap
+		id：自定义名称，表示你定义的这个resultMap
+		type：java类型的全限定名称
+		例如：<resultMap id="studentMap" type="com.bjpowernode.domain.Student">
+
+		列名和java属性的关系
+			- 主键列：使用id标签
+				column：列名
+				property：java类型的属性名
+				例如：<id column="id" property="id"></id>
+			- 非主键列：使用result标签
+				例如：<result column="name" property="name"></result>
+
+	例如：
+		    <resultMap id="studentMap" type="com.bjpowernode.domain.Student">
+			<id column="id" property="id"></id>
+			<result column="name" property="name"></result>
+			<result column="email" property="email"></result>
+			<result column="age" property="age"></result>
+		    </resultMap>
+		    <select id="selectAllStudents" resultMap="studentMap">
+			select * from student
+		    </select>
+
+20.当查询的列名和对象属性名不一致时的解决方案
+	两种
+		第一种：使用resultMap指定列名和java对象的属性对应关系。
+		第二种：在sql语句中给列取别名，强行让列名和Java对象的属性名一样，这样就能不用resultMap解决问题。
+			如：
+				select id as stuid from student
+				使用as将列名从id改成了stuid。
+
+21.like模糊查询的两种方式（实例 05）
+	第一种：Java代码中指定like的内容
+		接口：
+			List<Student> selectLikeOne(String email);
+		mapper：
+			<select id="selectLikeOne" resultType="com.bjpowernode.domain.Student">
+				select * from student where email like #{email}
+			</select>
+		测试文件：
+			List<Student> students=dao.selectLikeOne("%qq%");
+			for (Student student:students){
+			    System.out.println(student);
+			}
+	
+	第二种：在mapper文件中拼接like的内容
+		接口：
+			List<Student> selectLikeTwo(String email);
+		mapper：
+			<select id="selectLikeTwo" resultType="com.bjpowernode.domain.Student">
+				select * from student where email like "%" #{email} "%"
+			</select>
+		测试文件：
+			//准备好like的内容
+			String email="163";
+			List<Student> students=dao.selectLikeTwo(email);
+			for (Student student:students){
+			    System.out.println(student);
+			}
+			
+22.动态SQL（实例 06）
+	sql语句的内容是变化的，可以根据条件获取到不同的sql语句。
+	主要是where部分发生变化。
+
+	动态sql的实现，使用的是mybatis提供的标签：<if> <where> <foreach>
+
+	1.<if>是判断条件的。
+		语法：
+			<if test="判断条件">
+				部分sql语句
+			</if>
+
+		例如：
+			接口：
+				 //动态sql，使用java对象作为参数
+				 List<Student> selectStudentIf(Student student);
+			mapper：
+				    <!-- if
+					test：使用参数中java对象的属性值作为判断条件
+				    -->
+				    <select id="selectStudentIf" resultType="com.bjpowernode.domain.Student">
+					select * from student
+					where   1=1
+					<if test="age>19">
+					    and age=#{age}
+					</if>
+				    </select>
+			测试文件：
+				Student stu=new Student();
+				stu.setAge(20);
+				List<Student> Students=dao.selectStudentIf(stu);
+
+			如果满足if中的条件，那么if语句中的部分sql语句就会被加到主sql语句的后面。
+		
+		注意：如果同时存在多个if，那么多个if都会执行，不会只执行最前面的。
+
+	2.<where> 用来包含多个<if>的，当多个<if>有一个成立的话，<where>会自动增加一个where关键字，
+	  并去掉if中多余的and、or等。
+	  语法：
+		where：<where><if><if>....</where>
+
+	  例如：
+		接口：
+			List<Student> selectStudentWhere(Student student);
+		mapper：
+			 <select id="selectStudentWhere" resultType="com.bjpowernode.domain.Student">
+				select * from student
+				<where>
+				    <if test="age>19">
+					and age=#{age}
+				    </if>
+				</where>
+			 </select>
+		测试文件：
+			Student stu=new Student();
+			stu.setAge(20);
+			List<Student> Students=dao.selectStudentWhere(stu);
+
+	  注意：如果使用了<where>标签，那么sql主语句中就不需要写where了。
+
+	3.<foreach> 循环Java中的数组、List集合的。主要用在sql的in语句中的。
+		
+		语法：
+			<foreach collection="" item="" open="" close="" separator="">
+			</foreach>
+			collection：表示接口中方法参数的类型，如果是数组就使用array，如果是list集合就使用list。
+			item：自定义的，表示数组或集合成员的变量。
+			open：表示循环开始时的字符。
+			close：表示循环结束时的字符。
+			separator：表示集合成员之间的分隔符。
+
+		例如（循环基本类型）：查找学生id是 1001，1002，1003的三个学生
+			需要的sql语句：select * from student where id in(1001,1002,1003)
+
+			接口：
+				List<Student> selectForeachOne(List<Integer> idlist);
+
+			mapper：
+				<select id="selectForeachOne" resultType="com.bjpowernode.domain.Student">
+					select * from student where id in
+					<foreach collection="list" item="myid" open="(" close=")" separator=",">
+					    #{myid}
+					</foreach>
+				</select>
+
+			测试文件：
+				List<Integer> idlist=new ArrayList<>();
+				idlist.add(1001);
+				idlist.add(1002);
+				idlist.add(1003);
+				List<Student> students=dao.selectForeachOne(idlist);
+
+		例如（循环对象）：查找学生id是 1004，1005的两个学生
+			需要的sql语句：select * from student where id in(1004,1005)
+
+			接口：
+				List<Student> selectForeachTwo(List<Student> students);
+
+			mapper：
+				<select id="selectForeachTwo" resultType="com.bjpowernode.domain.Student">
+					select * from student where id in
+					<foreach collection="list" open="(" close=")" separator="," item="student">
+					    #{student.id}
+					</foreach>
+				</select>
+				注意：这里的student.id表示的是student.getId()
+
+			测试方法：
+				Student s1=new Student();
+				s1.setId(1004);
+				Student s2=new Student();
+				s2.setId(1005);
+
+				List<Student> stuList=new ArrayList<>();
+				stuList.add(s1);
+				stuList.add(s2);
+				List<Student> students=dao.selectForeachTwo(stuList);
+
+	4.sql代码片段，就是复用一些语句。
+		用法步骤：
+			1.先使用 <sql id="自定义名称(唯一)"> sql语句 </sql> 定义sql语句
+			2.再使用 <include refid="定义的sql语句的id值" /> 将定义的sql语句插入进来
+
+		例如：
+			<sql id="mysql">select * from student</sql>
+			<select id="selectStudentWhere" resultType="com.bjpowernode.domain.Student">
+				<include refid="mysql"></include>
+				<where>
+				    <if test="age>19">
+					and age=#{age}
+				    </if>
+				</where>
+			</select>
+
+		sql代码片段的好处：使代码便于维护，需要批量改动代码时更加方便。
+
+23.数据库的属性配置文件（掌握）
+	作用：把数据库连接信息放到一个单独的文件中，和mybatis主配置文件分开，
+	      目的是为了便于修改，保存，处理多个数据库的信息。
+
+	用法：
+		第一步：在resources目录中定义一个属性配置文件：xxx.properties，例如：jdbc.properties，
+			在属性配置文件中定义数据，格式是 key=value
+			key：一般使用 . 做多级目录的。例如：jdbc.mysql.driver
+
+		第二步：在mybatis的主配置文件中使用<properties>标签指定文件的位置，
+			在需要使用值的地方，${key}。
+
+	注意：在properties文件中&不需要转译，因此url不需要用&amp;转译&。
+
+	例如：
+		jdbc.driver=com.mysql.cj.jdbc.Driver
+		jdbc.url=jdbc:mysql://localhost:3306/mybatis? useUnicode=true&characterEncoding=utf8&serverTimezone=GMT
+		jdbc.user=root
+		jdbc.password=hxr001223
+
+24.mybatis主配置文件指定多个mapper文件的方法
+	第一种：
+		在<mappers>标签下使用多个<mapper>标签来指定多个mapper文件，大型项目不适用。
+		例如：
+			<mappers>
+				<mapper resource="com/bjpowernode/dao/StudentDao.xml"/>
+				<mapper resource="com/bjpowernode/dao/OrderDao.xml"/>
+			</mappers>
+	第二种：
+		在<mappers>标签下使用<package>标签来指定一个包，这个包中的所有xml文件(mapper文件)都能一次性加载给mybatis。
+		例如：
+			<mappers>
+				<package name="com.bjpowernode.dao">
+			</mappers>
+		注意：使用<package>标签有两点要求：
+			1.mapper文件名称需要和接口名称一样。
+			2.mapper文件和dao接口文件需要在同一目录。
+
+25.PageHelper（实例 06）
+	作用：PageHelper做数据分页的。并且可以实行多种数据库的分页。
+	使用要求：
+		第一步：PageHelper需要下载才能使用，网址：https://github.com/pagehelper/Mybatis-PageHelper 。
+			但是maven可以直接通过依赖将它导入，maven坐标：
+								<dependency>
+								      <groupId>com.github.pagehelper</groupId>
+								      <artifactId>pagehelper</artifactId>
+								      <version>5.1.10</version>
+								</dependency>
+		第二步：加入plugin配置，在<environments>之前加入：
+						<plugins>
+							<plugin interceptor="com.github.pagehelper.PageInterceptor" />
+						</plugins>
+
+	用法：在调用查询方法前先调用PageHelper的静态方法实现分页：PageHelper.startPage(pageNum,pageSize);
+									pageNum：显示哪一页
+									pageSize：一页中有几行数据
+	
+	例如：
+		接口：
+			//使用PageHelper分页数据
+			 List<Student> selectAll();
+
+		mapper文件：
+			<!-- 使用pagehelper分页数据 -->
+			    <select id="selectAll" resultType="com.bjpowernode.domain.Student">
+				select * from student order by id
+			    </select>
+
+		测试文件：
+				SqlSession sqlSession=MyBatisUtils.getSqlSession();
+				StudentDao dao=sqlSession.getMapper(StudentDao.class);
+				//加入pagehelper的方法，实现分页
+				//pageNum：显示哪一页
+				//pageSize：一页中有几行数据
+				PageHelper.startPage(2,3);
+				List<Student> students=dao.selectAll();
+				for (Student student:students){
+				    System.out.println(student);
+				}
+			
+
+
+
+
+	
+
+
+
+
+			
+
+
+
+
+	
+
+	
+	
+			
+		
+		
+		
+		
+
+
+
+

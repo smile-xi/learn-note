@@ -1,0 +1,1781 @@
+1.Spring的作用
+	Spring的主要作用就是为代码“解耦合”，降低代码间的耦合度。就是让对象和对象（模块和模块）
+	之间关系不是使用代码关联，而是通过配置来说明。即在Spring中说明（模块）的关系。
+
+	Spring的核心是控制反转（IoC）和面向切面编程（AOP）。Spring是可以在Java SE/EE中使用的轻量级开源框架。
+
+2.Spring的核心IoC：
+	IoC：控制反转，是一个概念，一个思想。用来指导我们如何创建、管理、使用对象的。
+
+	依赖关系：类A使用了类B的属性或方法，叫做类A依赖类B。
+
+	控制：控制对象的创建，属性的赋值，依赖关系的管理。以及对象从创建到销毁的整个生命周期。
+
+	反转：把开发人员在代码中创建对象的权限转移给代码之外的容器（Spring）实现，由容器实现对象的创建，管理。
+
+	IoC简单的说就是由别人创建对象，你在代码中使用创建好的对象。Spring是容器，可以创建和管理对象，管理依赖关系。
+	Spring可以看作是一个大工厂，这个工厂生产java对象。【Servlet就使用了IoC思想】
+
+	IoC的技术实现：
+		1.DL  依赖查找。
+		2.DI(Dependency Injection)  依赖注入。 //你在代码中只需要提供需要使用的对象的名称，对象如何创建，赋值，从容器中获取都是容器自己完成的。
+	Spring框架使用DI，实现对象的管理，Spring底层是反射机制。
+
+	为什么要使用IoC呢？
+		目的就是减少对代码的改动，也能实现不同的功能。
+
+3.如何通过spring获取对象（初试，可以看实例）
+	1.首先定义spring配置文件(.xml)，例如：
+		<?xml version="1.0" encoding="UTF-8"?>
+		<beans xmlns="http://www.springframework.org/schema/beans"
+		    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+		    xsi:schemaLocation="http://www.springframework.org/schema/beans 
+					http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+		    <!-- 
+			配置service
+			<bean> 配置的是需要创建的对象
+			    id：自定义，要求是唯一值，表示在Spring中的对象名称，通过这个名称可以在Spring中找到对象，获取对象
+			    class：需要创建实例的全限定名称（带包名），不能是接口（Spring使用反射机制创建对象）
+		     -->
+		    <bean id="userServiceId" class="com.UserServiceImp"></bean>
+		</beans>
+
+	2.测试/获取对象
+		import org.springframework.context.ApplicationContext;
+		import org.springframework.context.support.ClassPathXmlApplicationContext;
+
+		public class Test {
+			public static void main(String[] args) {
+				//从spring容器中获得对象
+				//1.获得容器
+				String xmlPath="com/beans.xml";
+				ApplicationContext applicationContext=new ClassPathXmlApplicationContext(xmlPath);  //!当配置文件被加载，里面的对象
+															就已经进行了实例化，并存放
+															在spring的map集合中
+				
+				//2.获得对象---不需要自己去new，都是从spring容器(spring的map)中获得
+				UserService user=(UserService) applicationContext.getBean("userServiceId");
+				user.addUser();
+			}
+		}
+
+	注意：Spring把所有java对象称为bean。
+
+4.Spring容器相当于一个Map集合
+	spring是把创建好的对象放入到map中的，spring框架有一个map存放对象的。
+                Map(id的值,对象)
+
+	spring默认创建对象的时间：在创建spring的容器时，会创建配置文件中的所有对象。
+
+5.关于xml配置文件中的property标签/属性注入（实例）
+	<property name="" ref=""></property>    位于bean标签中
+	作用：用于属性注入。
+	name：bean的属性名称（！通过set方法来获得，只和set方法有关）
+	ref：另一个bean的id值的引用
+
+6.核心API  (之后不使用，在学习过程中需要)
+	BeanFactory：这是一个工厂，用于生成任意bean.---！使用该接口加载配置文件的话，只有在第一次调用getBean的时候才会实例化
+
+	ApplicationContext：是BeanFactory的子接口，功能更强大。---！使用该接口时，当配置文件被加载，就已经进行了实例化
+
+	ClassPathXmlApplicationContext：表示从类路径中加载spirng的配置文件
+
+	FileSystemXmlApplicationContext：表示从指定盘符中加载spring的配置文件
+
+7.三种bean的实例化方式
+	- 默认构造
+		<bean id="" class=""> 这种方式必须提供无参构造
+
+	- 静态工厂
+		常用与spring整合其他框架/工具
+		用于生产实例对象，提供的所有方法必须是静态static
+		使用方法：<bean id="" class="工厂全限定类名" factory-method="静态方法名"></bean>
+
+	- 实例工厂
+		必须先有工厂实例对象，通过实例对象创建对象，提供的所有方法都是非静态的。
+		使用方法：
+			1.先创建工厂实例：<bean id="" class="工厂全限定类名"></bean>
+
+			2.再调用工厂的方法获取需要的对象：<bean id="" factory-bean="工厂的id" factory-method="实例方法名"></bean>
+
+			factory-bean：确定工厂实例。
+			factroy-method：确定使用的方法。
+
+8.bean的种类
+	普通bean：
+		当做了该操作时：<bean id="" class="A"></bean>，spring直接创建A实例，并返回。
+
+	FactoryBean：是一个特殊的bean，具有工厂生产对象的能力，只能生产特定的对象。
+		     bean必须实现FactoryBean接口，此接口提供了方法 getObject() 用于获取特定的bean。
+		     <bean id="" class="FB"></bean>，先创建FB实例，然后调用getObject()方法返回特定的对象。
+
+9.作用域
+	用于确定spirng创建bean实例的个数。
+	取值：
+		- singleton 单例，默认值。
+		- prototype 多例，每执行一次getBean将获得一个实例。
+
+	用法：
+		<bean id="" class="" scope="作用域值"></bean>
+
+10.Spring什么时候实例化bean，首先要分2种情况 
+	第一：
+		如果你使用BeanFactory作为Spring Bean的工厂类，则所有的bean都是在第一次使用该Bean的时候实例化。
+	
+	第二：
+		如果你使用ApplicationContext作为Spring Bean的工厂类，则又分为以下几种情况：
+			（1）如果bean的scope是singleton的，并且lazy-init为false（默认是false，所以可以不用设置），
+			     则 ApplicationContext启动的时候就实例化该Bean，并且将实例化的Bean放在一个map结构的缓存中，
+			     下次再使 用该 Bean的时候，直接从这个缓存中取。
+
+			（2）如果bean的scope是singleton的，并且lazy-init为true，则该Bean的实例化是在第一次使用该Bean的时候进行实例化。
+
+			（3）如果bean的scope是prototype的，则该Bean的实例化是在第一次使用该Bean的时候进行实例化。
+
+11.Spring容器中Bean的生命周期（实例）
+	- 初始化和销毁
+		目标方法执行前或执行后，可能进行初始化或销毁。
+		语法：<bean id="" class="" init-method="初始化方法名称" destroy-method="销毁的方法名称"></bean>
+		例如：<bean id="userServiceId" class="com.UserServiceImp" 
+		    	  init-method="myInit" destroy-method="myDestroy"></bean>
+		      </beans>
+
+	- BeanPostProcessor 后处理Bean
+		spring提供的一种机制：只要实现了BeanPostProcessor接口，并将实现类提供给spring容器，
+				      spring容器将自动执行，让bean对象在初始化方法前执行before()，
+				      在初始化方法后执行afrer()
+
+		spring提供工厂钩子，用于修改实例对象，可以生成代理对象，是AOP底层。
+		以下为模拟spring：
+			A a=new A();
+			a=B.before(a);  ------->将a的实例对象传递给了后处理Bean，可以生成代理对象并返回。
+			a.init();
+			a=B.after(a);
+			
+			a.addUser();//目标方法  ----->生成代理对象，目的在目标方法前后执行（例如：开启事务、提交事务）
+			  
+			a.destroy();
+
+		后处理Bean作用某一个目标类，还是所有目标类？
+		答：所有。
+
+		如何只作用一个？
+		答：通过before方法或after方法中的第二个参数来控制。第二个参数代表的是传进来的bean的id值。
+		例如：
+			public Object postProcessBeforeInitialization(Object arg0, String arg1)throws BeansException {
+				if("userServiceId".equals(arg1)){
+					System.out.println("前方法:"+arg1);
+				}
+				return arg0;
+			}
+
+12.属性的依赖注入（实例）
+	- 依赖注入的方式：手动装配和自动装配
+	
+	- 手动装配：一般进行配置信息都采用手动
+		* 基于xml装配（构造方法、setter方法等）
+		* 基于注解装配
+
+	- 自动装配：struts和spring整合可以自动装配
+
+	- 构造方法注入（装配）：
+		<constructor-arg>标签：用于配置构造方法的一个参数
+		属性：
+			name：参数的名称
+			index：参数的索引号，从0开始。如果只有索引但匹配到了多个构造方法时，默认使用第一个。
+			type：确定参数的类型
+			value：设置普通数据（整形字符串等等）
+			ref：引用数据，一般是另一个bean的id值
+		
+		使用name装配：
+				<bean id="userId" class="com.User">
+					<constructor-arg name="username" value="杰克"></constructor-arg>
+					<constructor-arg name="age" value="18"></constructor-arg>
+				</bean>
+
+		使用index和type装配(常用)：
+				<bean id="userId" class="com.User">
+					<constructor-arg index="0" type="java.lang.String" value="杰克"></constructor-arg>
+					<constructor-arg index="1" type="java.lang.Integer" value="18"></constructor-arg>
+				</bean>
+
+	- setter方法注入（装配）：
+		<property>标签：用于配置一个setter方法
+		属性：
+			name：需注入的属性名称（！通过set方法来获得，只和set方法有关）
+			value：设置普通数据（整形字符串等等）
+			ref：引用数据，一般是另一个bean的id值
+
+		普通数据注入的方式：
+			<property name="" value=""></property>
+			例如：
+				<bean id="personId" class="com.Person">
+					<property name="pname" value="杰克"></property>
+					<property name="age" value="18"></property>
+				</bean>	
+
+		引用数据注入的方式：
+			<property name="" ref=""></property>
+			例如：
+				<bean id="personId" class="com.Person">
+					<property name="homeAddr" ref="homeAddrId"></property>
+				</bean>	
+
+				<bean id="homeAddrId" class="com.Address">
+					<property name="addr" value="朝阳路"></property>
+					<property name="tel" value="1836111"></property>
+				</bean>	
+
+	- 引用类型的自动注入：
+		spring框架根据某些规则可以自动给引用类型赋值，不需要自己手动给引用类型赋值了。
+		使用规则：
+		    常用的是：byName，byType
+		    1.byName（按名称注入）：java类中引用类型的属性名和spring容器中（配置文件）<bean>的id名称一样，
+					    且数据类型是一致的，这样的容器中的bean，spring能够自动赋值给引用类型。
+			语法：
+			    <bean id="xx" class="yy" autowire="byName">
+			    </bean>
+
+			例如：
+				    配置文件：
+					    <bean id="myStudent" class="com.bjpowernode.bao4.Student4" autowire="byName">
+						<property name="name" value="小希"></property>
+						<property name="age" value="20"></property>
+					    </bean>
+					    <bean id="school" class="com.bjpowernode.bao4.School">
+						<property name="name" value="清华"/>
+					    </bean>
+				    Student实体类：
+					public class Student4 {
+					    private String name;
+					    private int age;
+					    private School school;
+					    。。。。。
+				school的属性名和bean中的id值一致，且类型相同，因此spring自动对school属性进行了注入。
+
+		    2.byType（按类型注入）：java类中引用类型的数据类型和spring容器中（配置文件）<bean>的class属性
+					    是同源关系的，这样的bean能够自动赋值给引用类型。（如果有多个bean符合自动注入条件的话程序会报错）
+
+					    同源关系:
+						1.java类中引用类型的数据类型和bean的class值是一样的。
+						2.java类中引用类型的数据类型和bean的class值是父子关系的。
+						3.java类中引用类型的数据类型和bean的class值是接口和实现类关系。
+			语法：
+			    <bean id="xx" class="yy" autowire="byType">
+			    </bean>
+
+			例如：
+				配置文件：
+					    <bean id="student2" class="com.bjpowernode.bao4.Student4" autowire="byType">
+						<property name="name" value="小明"></property>
+						<property name="age" value="16"></property>
+					    </bean>
+					    <bean id="school" class="com.bjpowernode.bao4.School">
+						<property name="name" value="清华"/>
+					    </bean>
+				Student实体类：
+					public class Student4 {
+					    private String name;
+					    private int age;
+					    private School school;
+					    。。。。。
+				  school属性的数据类型和bean中的class属于同源关系，因此spring自动对school属性进行了注入。
+
+					
+
+	- P命名空间注入
+		对setter方法注入“进行简化”，替换了<property>。
+		
+		p命名空间使用的前提：必须添加命名空间，加在如下位置
+				<?xml version="1.0" encoding="UTF-8"?>
+					<beans xmlns="http://www.springframework.org/schema/beans"
+					    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	         -------------------------> xmlns:p="http://www.springframework.org/schema/p" <-------------------------------
+					    xsi:schemaLocation="http://www.springframework.org/schema/beans 
+								http://www.springframework.org/schema/beans/spring-beans.xsd">
+					</beans>
+
+		语法：
+			- <bean p:属性名="普通值">
+			- <bean p:属性名-ref="引用值">
+
+			例如：
+				<bean id="personId" class="com.Person" 
+					  p:age="20" p:pname="张三" 
+					  p:companyAddr-ref="companyAddrId" p:homeAddr-ref="homeAddrId">
+				</bean>	
+
+	- SpEL注入
+		对<property>进行统一编程，所有的内容都是用value，
+		此后property中就只有两个值了，一个name，一个value。
+
+		语法：
+			<property name="" value="#{表达式}"></property>
+
+		常见的表达式：
+			#{123}、#{'jack'} ------ 表示数字、字符串
+			#{beanId} ----- 另一个bean的id值
+			#{beanId.propName} ----- 操作数据
+			#{beanId.toString()} ----- 执行方法
+			#{T(类).字段|方法} ----- 静态方法或字段
+			
+13.集合注入
+	集合的注入都是给<property>添加子标签
+		数组：<array>
+		List：<list>
+		Set：<set>
+		Map：<map>            //map存放键值对，使用<entry>进行描述
+		Properties：<props>   //最常用
+					
+	普通数据：<value>
+	引用数据：<ref>
+	键值对数据：<entry key="" value="">
+	properties数据：<prop key="">值</prop>
+	
+	语法：
+		<property name="">
+			<子标签>
+				<value、ref等></value、ref等>
+			</子标签>
+		</property>
+
+		例如：
+			<bean id="collDataId" class="com.CollData">
+				<property name="arrayData">
+					<array>
+						<value>HHH</value>
+						<value>XXX</value>
+						<value>RRR</value>
+					</array>
+				</property>
+
+				<property name="mapData">
+					<map>	
+						<!-- 两种写法 主用第一种-->
+						<entry key="jack" value="杰克"></entry>
+						<entry>
+							<key><value>zhangsan</value></key>
+							<value>张三</value>
+						</entry>
+					</map>
+				</property>
+
+				<property name="propsData">
+					<props>
+						<prop key="smoke">抽烟</prop>
+						<prop key="drink">喝酒</prop>
+					</props>
+				</property>
+			</bean>
+
+14.注解（实例）
+	注解：就是一个类，使用: @注解名称
+
+	开发中：使用注解取代xml配置文件。
+
+	注解使用前提：需要导入aop包，并添加命名空间。加在如下位置
+		<?xml version="1.0" encoding="UTF-8"?>
+		<beans xmlns="http://www.springframework.org/schema/beans"
+		    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	----------> xmlns:context="http://www.springframework.org/schema/context" <-----------
+		    xsi:schemaLocation="http://www.springframework.org/schema/beans 
+					http://www.springframework.org/schema/beans/spring-beans.xsd
+			--------------> http://www.springframework.org/schema/context 
+					http://www.springframework.org/schema/context/spring-context.xsd"> <-------------
+
+	声明组件扫描器（component-scan）,组件就是java对象
+            base-package:指定注解在你的项目中的包名。
+            component-scan工作方式：spring会去扫描遍历base-package指定的包，
+                                    扫描包中和子包中的所有类，找到类中的注解，按照注解的功能创建对象，或给属性赋值。
+		语法：<context:component-scan base-package="包名"/>
+
+
+	1. @Component 取代 <bean class="">    此方法不指定对象的名称，有spring定义对象的名称，这个spring定义的对象的名称为类名的首字母小写。
+	   @Component(value="myStudent") 取代 <bean id="myStudent" class="">
+	      value也可以省略，如： @Component("myStudent")
+		@Component：创建对象的，等同于<bean>的功能
+	           属性：value 就是对象的名称，也就是bean的id值，value的值是唯一的，创建的对象在整个spring容器中就一个。
+	           位置：在类的上面写该注解。
+	   
+	2.web开发，提供3个 @Component 注解的衍生注解（功能一样）取代<bean class="">
+		- @Repository（用在持久层上面）：放在dao的实现类上，表示创建dao对象，dao对象是能访问数据库的。
+		- @Service（用在业务层上面）：放在service的实现类上面，创建service对象，service对象是做业务处理，可以有事务等功能的。
+		- @Controller（用在控制器的上面）：放在控制器（处理器）类上面，创建控制对象的，控制器对象可以能够接收用户提供的参数以及显示请求的处理结果。
+
+		以上三个注解的使用语法和 @Component 一样，都能创建对象，但是这三个注解含有额外功能。
+		@Repository，@Service，@Controller是给项目的对象分层的。
+
+	3.依赖注入
+		普通值： @Value("")
+			用法位置：1.在属性定义的上面，无需set方法，推荐使用。
+				  2.在set方法的上面。
+		引用值：
+			方式1：按照类型注入
+				@Autowired：默认使用byType自动注入的方式。
+				用法位置：1.在属性定义的上面，无需set方法，推荐使用。
+				  2.在set方法的上面。
+
+			方式2：按照名称注入一
+				@Autowired 
+				@Qualifier("bean的id")  表示使用指定名称的bean完成赋值
+				这两个注解联用使用的是byName来实现注入。
+
+			方式3：按照名称注入二
+				@Resource(name="bean的id") 或 @Resource
+				来自jdk中的注解，spring框架提供给了对这个注解的功能支持，可以使用它给引用类型赋值。
+				使用的也是自动注入的原理，支持byName，byType，默认是byName。
+
+				用法位置：1.在属性定义的上面，无需set方法，推荐使用。
+				  2.在set方法的上面。
+
+				注解的原理：该注解先使用byName自动注入，如果byName赋值失败，再使用byType。
+
+			注意：@Autowired有一个属性为：required。
+				required是一个boolean类型，默认为true。
+				required=true：表示如果引用类型赋值失败，程序报错，并终止执行。
+				required=false：表示如果引用类型赋值失败，程序正常执行，引用类型的值为null。
+
+	4.生命周期
+		初始化： @PostConstruct
+		销毁： @PreDestroy
+
+	5.作用域
+		@Scope("prototype") //多例
+				
+	6.注解和XML混合使用
+		将所有的bean都配到xml中，将所有的依赖都使用注解。
+		此时 @Autowired 默认不生效，为了生效，需要在xml配置：<context:annotation-config></context:annotation-config>
+
+	7.总结：
+		注解1：<context:component-scan base-package="包名"></context:component-scan>
+		注解2：<context:annotation-config></context:annotation-config>
+
+		一般情况下两个注解不一起使用
+			- "注解1"扫描含有（ @Component 等）类，注入注解自动生效。
+			- "注解2"只在xml和注解（注入类）混合使用时，使注入注解生效。
+
+15.jdk动态代理（实例）
+	Proxy.newProxyInstance(loader, interfaces, h)
+		- 参数1：loader：类加载器，动态代理类 运行时创建，任何类都需要类加载器将其加载到内存。
+				类加载器的写法 一般情况：当前类.class.getClassLoader();
+
+		- 参数2：interfaces：代理类需要实现的所有接口
+				写法：
+					方式一：目标类实例.getClass().getInterfaces()  注意：只能获得自己的接口，不能获得父元素的接口
+					方式二：new Class[]{UserService.class}
+
+		- 参数3：h：处理类，这是一个接口(InvocationHandler)，必须进行实现，一般情况采用匿名内部类的方式。
+				提供invoke方法，代理类的每一个方法执行时，都将去调用一次invoke方法
+					invoke方法的三个参数：
+						第一个：Object proxy：代理对象
+						第二个：Method method：代理对象当前执行的方法的描述对象
+							如何获取执行方法的方法名：method.getName()
+							如何执行方法：method.invoke(对象,参数)
+						第三个：Object[] args：方法的实际参数
+
+	jdk动态代理实现步骤：
+		1.创建目标类（SomeServiceImpl目标类，给它的doSome，doOther增加输出时间，事务的功能）
+		2.创建InvocationHandler接口的实现类，在这个类实现给目标方法增加功能。
+		3.使用jdk中的类Proxy，创建代理对象。实现创建对象的能力。
+
+	动态代理的作用：
+		1.在目标类源代码不改变的情况下，增加功能。
+		2.减少代码的重复。
+		3.在写目标类代码时可以专注业务逻辑代码。
+		4.解耦合。
+
+16.cglib字节码增强（实例）
+	- 没有接口，只有实现类
+	- 采用字节码增强框架：cglib，在运行时创建目标类的子类，从而对目标类进行增强。
+	- 导入jar包：
+		spring-core.jar中已经整合了核心与依赖，因此只需要导入spring-core.jar即可。
+	- 编写代理类
+		1.核心类：
+			Enhancer enhancer=new Enhancer();
+
+		2.确定父类：
+			enhancer.setSuperclass(userService.getClass());
+
+		3.设置回调函数,MethodInterceptor接口等效jdk中的InvocationHandler接口
+			enhancer.setCallback(new MethodInterceptor() {
+			
+			@Override
+			public Object intercept(Object arg0, Method arg1, Object[] arg2,
+					MethodProxy arg3) throws Throwable {
+				// TODO Auto-generated method stub
+				return null;
+				}
+			});
+
+			/*intercept方法等效于jdk中的invoke方法*/
+
+		4.创建代理
+			UserServiceImp proxyService=(UserServiceImp) enhancer.create();
+	
+
+17.AOP
+	aop：面向切面编程，基于动态代理，可以使用jdk、cglib两种代理方式。
+	     aop就是动态代理的规范化，把动态代理的实现步骤，方式都定义好了，让开发人员用一种
+	     统一的方式去使用动态代理。
+
+	1.AOP采取横向抽取机制，取代了传统的纵向继承体系重复性代码。
+	
+	2.经典应用：事务管理、性能监视、安全检查、缓存、日志等。
+
+	3.利用AOP可以对业务逻辑的各个部分进行隔离，从而使得业务逻辑各部分之间的耦合度降低，提高程序的可重用性，
+	  同时提高了开发的效率。
+
+	4.Spring AOP使用纯java实现，不需要专门的编译过程和类加载器，再运行期通过代理方式向目标类织入增强代码。
+
+	5.AOP实现原理：aop底层采用代理机制进行实现。
+		接口+实现类：spring采用jdk的动态代理Proxy。
+		实现类：spring采用cglib字节码增强。
+
+	6.AspectJ：AspectJ是一个基于java语言的AOP框架，Spring2.0开始，Spring AOP引入对AspectJ的支持，
+	           AspectJ扩展了java语言，提供了一个专门的编译器，在编译是提供横向代码的织入。
+
+	7.什么时候使用aop技术：
+		1.当你要给一个系统中存在的类修改功能时，而你没有源代码，就可以使用aop增加功能。
+		2.你要给项目中的多个类，增加一个相同的功能，就是用aop。
+		3.给业务方法增加事务，日志输出时，使用aop。
+
+	怎么理解面向切面编程：
+		1.需要在分析项目功能时，找出切面。
+		2.合理的安排切面的执行时间（在目标方法前，还是在目标方法后）。
+		3.合理的安排切面执行的位置，在哪个类，哪个方法增加切面。
+
+
+18.AOP术语
+	- User{
+		void addUser(){}
+		void upUser(){}
+		void deleteUser(){}
+	  }
+
+	1.target：目标类，需要被代理的类。
+		  例如：User这个类
+
+	2.Aspect：切面，给你的目标类增加的功能就是切面。例如在目标方法执行结束后输出当前时间。
+		切面的特点：一般都是非业务方法，独立使用的。
+		常见的切面功能：日志、事务、统计信息、参数检查、权限验证。
+
+	3.JoinPoint：连接点，连接业务方法和切面的位置。实际上就是目标类中的业务方法。
+
+	4.PointCut：切入点，指多个连接点方法的集合。多个方法。
+
+	5.目标对象：给哪个类的方法增加功能，这个类就是目标对象。
+
+	6.advice：通知，表示切面功能执行的时间。（在方法目标方法执行前或目标方法执行结束后等等）
+
+	JoinPoint和PointCut的区别：JoinPoint表示一个方法，PointCut表示一个或多个方法。
+
+	一个切面的三个关键要素：
+		1.切面的功能代码，切面能干什么。
+		2.切面的执行位置，使用PointCut表示切面执行的位置。
+		3.切面的执行时间，使用advice表示切面功能执行的时间。
+
+	aop的技术实现框架：
+		1.spring：spring在内部实现了aop规范，能做aop工作。
+		          spring主要在事务处理时使用aop。
+			  我们项目开发中很少使用spring的aop实现，因为spring的aop比较麻烦。
+		
+		2.AspectJ（常用）：一个开源的专门做aop的框架。spring框架中集成了aspectJ框架，通过spring就能使用aspectj的功能。
+			   aspectJ实现aop有两种方式：
+				1.使用xml配置文件。
+				2.使用注解，我们项目中做aop功能一般都使用注解。
+	
+
+19.AOP联盟的通知类型
+	- 前置通知 org.springframework.aop.MethodBeforeAdvice
+		在目标方法执行前实施增强
+
+	- 后置通知 org.springframework.aop.AfterReturningAdvice
+		在目标方法执行后实施增强
+
+	- 环绕通知 org.aopalliance.intercept.MethodInterceptor
+		在目标方法执行前后实施增强
+
+	- 异常抛出通知 org.springframework.aop.ThrowsAdvice
+		在方法抛出异常后实施增强
+
+	- 引介通知 org.springframework.aop.IntroductionInterceptor
+		在目标类中添加一些新的方法和属性
+
+20.spring编写代理【半自动】（实例）
+	- 让spring创建代理对象，从spring容器中手动的获取代理对象。
+	- 注意：切面类中确定通知，需要实现不同的接口，接口就是规范，从而确定方法的名称。
+	- 导入jar包：
+		核心：4+1
+		AOP：AOP联盟(规范)、spring-aop(实现)
+		一共7个jar包
+
+		例：
+		   <!-- 1.创建目标类 -->
+		   <bean id="userServiceId" class="com.UserServiceImp"></bean>
+		   <!-- 2.创建切面类 -->
+		   <bean id="myAspectId" class="com.MyAspect"></bean>
+		   
+		   <!-- 3.创建代理类
+		   		- 使用工厂bean FactoryBean，底层调用getObject() 返回一个特殊的bean
+		   		- org.springframework.aop.framework.ProxyFactoryBean 用于创建代理的工厂bean，生成特殊代理对象
+		   			interfaces：确定接口们，类型是数组，通过<array>可以设置多个值，只有一个值时，可以直接写value=""
+		   				
+		   			target：确定目标类	
+		   			
+		   			interceptorNames：通知切面类的名称，类型是String[]，
+		   							     通过<array>可以设置多个值，只有一个值时，可以直接写value=""
+
+					optimize：强制使用cglib（需要时才写）
+		    -->
+		   <bean id="proxyServiceId" class="org.springframework.aop.framework.ProxyFactoryBean">
+		   		<property name="interfaces" value="com.UserService"></property>
+		   		<property name="target" ref="userServiceId"></property>
+		   		<property name="interceptorNames" value="myAspectId"></property>
+				<property name="optimize" value="true"></property>
+		   </bean>
+		
+		底层机制：
+			- 如果目标类有接口，采用jdk动态代理
+			- 如果没有接口，才有cglib 字节码增强
+			- 如果声明optimize="true"，那么无论是否有接口，都采用cglib
+			- 在使用注解的方式下，如果自动代理生成器：<aop:aspectj-autoproxy proxy-target-class="true"/>中
+			  proxy-target-class="true"属性为真，那么无论是否有接口，都是用cglib的代理方式。
+
+
+21.Spring aop编程【全自动】（实例）
+	- 从spring容器中获得目标类，如果配置了aop，spring将自动生成代理。
+	- 要确定目标类，需要使用 aspectj 切入点表达式，导入jar包：
+		（aspectj）com.springsource.org.aspectj.weaver-1.6.8.RELEASE.jar
+
+	- 导入命名空间：
+		xmlns:aop="http://www.springframework.org/schema/aop"
+		以及
+		http://www.springframework.org/schema/aop 
+		http://www.springframework.org/schema/aop/spring-aop.xsd
+
+	- 例：
+		    <!-- 1.创建目标类 -->
+		    <bean id="userServiceId" class="com.UserServiceImp"></bean>
+		    <!-- 2.创建切面类（通知） -->
+		    <bean id="myAspectId" class="com.MyAspect"></bean>
+		    <!-- 3.aop编程
+		   			1.导入命名空间
+		   			2.使用<aop:config>进行配置
+						- proxy-target-class="true" 声明使用cglib代理（需要时才写）
+
+		   				- <aop:pointcut> 切入点，从目标对象获取具体的方法
+		   					属性：
+		   					   expression：切入点表达式
+		   					   id：该切入点的引用名
+		   					   
+		   				- <aop:advisor> 特殊的切面，只有一个通知和一个切入点
+		   					属性：
+		   					   advice-ref：通知的引用
+		   					   pointcut-ref：切入点的引用
+		   					   
+		   			3.切入点表达式
+		   				execution(* com.UserServiceImp.*(..))
+		   					execution----选择方法
+		   					第一个*------返回值任意
+		   					com----------包名
+		   					UserServiceImp---类名
+		   					第二个*------方法名任意
+		   					(..)--------参数任意
+		    -->
+		 	<aop:config proxy-target-class="true">
+		 		<aop:pointcut expression="execution(* com.UserServiceImp.*(..))" id="myPointCut"/>
+		 		<aop:advisor advice-ref="myAspectId" pointcut-ref="myPointCut"/>
+		 	</aop:config>
+
+22.AspectJ（实例）
+	1.介绍
+		- AspectJ是一个基于java语言的AOP框架
+		- Spring2.0以后新增了对AspectJ切点表达式支持
+		- @AspectJ 是AspectJ1.5新增功能，通过jdk5注解技术，允许直接在bean类中定义切面
+		- 新版本Spring框架，建议使用AspectJ来开发AOP
+		- 主要用途：自定义开发
+
+	2.切入点表达式（掌握）
+		1.execution() 用于描述方法
+			语法：execution("访问权限类型 返回值类型 包、类、方法名(参数)throws 异常")
+				访问权限类型：一般省略
+					      public   公共
+					      *        任意
+				
+				返回值类型：不能省略
+					    void     没有返回值
+					    String   返回值是字符串
+					    *        任意
+
+				包：可以省略
+				    com               固定的包
+				    com.*.service     com包下面的子包任意，只要子包中有service包即可
+				    com..             com包下面所有的子包（包括自己）
+				    com.*.service..   com包下面的子包任意，子包中的service包下的所有包（包括自己）
+
+				类：可以省略
+				    UserService      指定类
+				    *Service         以Service结尾的类
+				    User*            以User开头的类
+				    *                任意
+
+				方法名：不能省略
+				      addUser       固定方法
+				      add*          以add开头的方法
+				      *User         以User结尾的方法
+				      *             任意方法
+
+				(参数)：不能省略
+				        ()          无参
+					(int)       一个整型
+					(int,int)   两个
+					(..)        参数任意
+
+				throws：可以省略，并且一般不写
+
+			例：
+				execution(* com.*.service..*.*(..))
+				返回值任意  
+				com包下面的子包任意，子包中的service包下的所有包（包括自己）
+				任意类
+				方法名任意
+				参数任意
+				注意："* com.*.service.."返回值类型和包名之间用空格隔开
+				      "*.*"类名和方法名之间用.隔开
+				      方法名之后紧跟参数，不需要隔开
+
+			例：<aop:pointcut expression="execution(省略)||
+			                              execution(省略)" id="myPointCut"/>
+
+				表示可以这两种表达式都可以匹配
+
+	3.AspectJ通知类型
+		- aop联盟定义通知类型，具有特定接口，必须实现，从而确定方法的名称。
+		- aspectj通知类型，只定义类型名称，以及方法的格式
+		- 通知类型个数（共6个，需要知道5种，掌握1种：around）：
+			* before：前置通知（应用：各种校验），在方法执行前执行，如果通知抛出异常，阻止方法运行。
+
+			* afterReturning：后置通知（应用：常规数据处理），方法正常返回后执行，如果方法中抛出异常，通知无法执行。
+
+			* around：环绕通知（应用：十分强大，可以做任何事），方法执行前后分别执行，可以阻止方法的执行。
+
+			* afterThrowing：抛出异常通知（应用：包装异常信息），方法抛出异常后执行，如果方法没有抛出异常，无法执行。
+
+			* after：最终通知（应用：清理现场），方法执行完毕后执行，无论方法中是否出现异常。
+
+			* declareParents：引介通知（不需要了解）
+
+	4.导入jar包
+		4个：
+			- aop联盟规范
+			- Spring aop实现
+			- Spring aspect实现
+			- aspect规范
+				     
+	5.基于xml（具体看com.aspect.a_xml包中的实例）
+		1.目标类：接口+实现
+
+		2.切面类：编写多个通知，因为采用aspectj，所以通知名称可以任意（方法名任意）
+
+		3.aop编程，将通知应用到目标类
+			
+		4.测试
+			<aop:config>
+				<aop:aspect ref="myAspectId">
+					<aop:pointcut expression="execution(* com.aspect.a_xml.UserServiceImp.*(..))" id="myPointCut"/>
+					
+					<!-- 3.1 前置通知
+						<aop:before method="" pointcut="" pointcut-ref=""/>
+							method：通知，即方法名
+							pointcut：切入点表达式，此表达式只能当前通知使用
+							pointcut-ref：切入点引用，可以与其他通知共享切入点
+							pointcut和pointcut-ref根据情况二选一使用
+						通知方法格式：public void myBefore(JoinPoint joinPoint){}
+							    参数：org.aspectj.lang.JoinPoint 用于描述连接点（目标方法），获得当前目标方法名等	
+						例如：   	    
+					<aop:before method="myBefore" pointcut-ref="myPointCut"/>
+					-->
+					
+					<!-- 3.2 后置通知，目标方法后执行，获得返回值
+						<aop:after-returning method="" pointcut-ref="" returning=""/>
+							returning 通知方法第二个参数的名称
+						通知方法格式：public void myAfterReturning(JoinPoint joinPoint,Object ret){}
+							参数1：描述连接点
+							参数2：类型Object，参数名由 returning="ret" 配置
+						例如	：
+					 <aop:after-returning method="myAfterReturning" pointcut-ref="myPointCut" returning="ret"/>
+					 -->
+					 
+					 <!-- 3.3 环绕通知
+						<aop:around method="" pointcut-ref=""/>
+						通知方法格式：public Object myAround(ProceedingJoinPoint joinPoint)throws Throwable{}
+							返回值类型：必须是Object
+							方法名：任意
+							参数：必须是org.aspectj.lang.ProceedingJoinPoint
+							抛出异常：Throwable
+						执行目标方法：Object obj=joinPoint.proceed();	
+						例如：
+					  <aop:around method="myAround" pointcut-ref="myPointCut"/>
+					  -->
+					  
+					  <!-- 3.4 抛出异常通知
+						<aop:after-throwing method="" pointcut-ref="" throwing=""/>
+							throwing：通知方法的第二个参数名称
+						通知方法的格式：public void myAfterThrowing(JoinPoint joinPoint,Throwable e){}
+							参数1：描述连接点
+							参数2：获得异常信息，类型Throwable，参数名由 throwing="" 来配置
+						例如：
+					  <aop:after-throwing method="myAfterThrowing" pointcut-ref="myPointCut" throwing="e"/>
+					  -->
+					  
+					  <!-- 3.5 最终通知  
+						例如：
+					  <aop:after method="myAfter" pointcut-ref="myPointCut"/>
+					  -->
+					  
+				</aop:aspect>
+			</aop:config>
+
+
+	6.基于注解（具体看com.aspect.b_annotation包中的实例）
+		1.替换bean
+			例：以 @Service("userServiceId") 替换 <bean id="userServiceId" class="com.aspect.a_xml.UserServiceImp"></bean>
+			    以 @Component("myAspectId") 替换 <bean id="myAspectId" class="com.aspect.a_xml.MyAspect"></bean>
+		
+		2.替换aop
+			- 必须进行aspectj自动代理以确定aop注解生效：
+				在xml文件中加上：<aop:aspectj-autoproxy></aop:aspectj-autoproxy>
+
+			- 声明切面
+				例： @Aspect 替换 <aop:aspect ref="myAspectId"></aop:aspect>
+				注意： @Aspect 在切面类（通知）中编写
+
+			- 声明公共切入点：@Pointcut
+				  * @Pointcut：定义公共切入点，如果你的项目中有多个切入点表达式是重复的，可以复用的，
+				     *         那么就可以使用@Pointcut。
+				     * 属性：value 切入点表达式
+				     * 特点：
+				     *      当使用@Pointcut定义在一个方法的上面，此时这个方法的名称就是切入点表达式的别名。
+     *					    其他的通知中的value属性就可以使用这个方法的名称来代替切入点表达式。
+					    这个方法一般是私有的，因为不需要被调用。
+
+				例：    @Pointcut("execution(* com.aspect.b_annotation.UserServiceImp.*(..))")
+					private void myPointCut(){}    （注意：空方法，方法为切入点id）
+					替换
+					<aop:pointcut expression="execution(* com.aspect.a_xml.UserServiceImp.*(..))" id="myPointCut"/>
+
+			- 前置通知：@Before
+				例： @Before("execution(* com.aspect.b_annotation.UserServiceImp.*(..))") 替换
+				     <aop:before method="myBefore" pointcut="execution(* com.aspect.b_annotation.UserServiceImp.*(..))"/>
+
+			- 后置通知：@AfterReturning
+				属性：1.value 切入点表达式
+			    *        2.returning 自定义的变量，用来表示目标方法的返回值，变量名必须和通知方法的形参名一样。
+			    *   特点：能够获取目标方法的返回值，可以根据这个返回值做不同的处理功能。
+			    *       可以修改这个返回值。
+				例： @AfterReturning(value="myPointCut()",returning="ret") 替换
+				     <aop:after-returning method="myAfterReturning" pointcut-ref="myPointCut" returning="ret"/>
+				     注意：myPointCut()为公共切入点id
+
+			- 环绕通知：@Around
+				   * 环绕通知方法的定义格式
+				   * 1.必须有一个返回值，推荐使用Object
+				   * 2.方法有参数，固定的参数：ProceedingJoinPoint
+
+				   * 属性：value 切入点表达式
+				   * 特点：1.功能最强的通知
+				   * 2.在目标方法的前和后都能增加功能
+				   * 3.控制目标方法是否调用执行
+				   * 4.修改原来的目标方法的执行结果，影响最后的调用结果。
+
+				   * 参数：ProceedingJoinPoint
+				   *    作用：执行目标方法。
+				   * 返回值：就是目标方法的执行结果，可以被修改。
+
+				   环绕通知经常做事务，在目标方法之前开启事务，在目标方法之后提交事务
+
+				例： @Around("myPointCut()") 替换
+				     <aop:around method="myAround" pointcut-ref="myPointCut"/>
+
+			- 抛出异常通知：@AfterThrowing
+				异常通知方法的定义格式：
+				   *    1.没有返回值
+				   *    2.方法可以没有参数，但如果有，那么参数就是JoinPoint，Exception。
+				   *
+				   *    属性：1.value 切入点表达式
+				   *        2.throwing 自定义的变量，表示目标方法抛出的异常对象，
+				   *           变量名必须和Exception参数的名称一样。
+				   *    特点：
+				   *        1.在目标方法抛出异常时执行
+				   *        2.可以做异常的监控程序
+
+				例： @AfterThrowing(value="myPointCut()",throwing="e") 替换
+				     <aop:after-throwing method="myAfterThrowing" pointcut-ref="myPointCut" throwing="e"/>
+
+			- 最终通知：@After
+				最终通知的定义格式：
+				     * 1.没有返回值
+				     * 2.方法没有参数，如果有的话，参数就是JoinPoint
+				     *
+				     *  属性：value 切入点表达式
+				     *  特点：
+				     *      1.总是会执行
+				     *      2.在目标方法之后执行
+				     *  作用：一般是做资源关闭或清除工作的。
+
+				例： @After("myPointCut()") 替换
+				     <aop:after method="myAfter" pointcut-ref="myPointCut"/>
+
+		3.aop注解总结：
+			@Aspect  声明切面，修饰切面类，从而获得通知
+
+			@Before            前置通知
+			@AfterReturning    后置通知
+			@Around            环绕通知
+			@AfterThrowing     抛出异常通知
+			@After             最终通知
+
+			@Pointcut  声明切入点：修饰方法 private void xxx(){} 之后通过"方法名()"获得切入点引用
+
+		4.在maven项目中使用aspectj（idea中实例）：
+			使用步骤：
+			    1.新建maven项目
+			    2.加入依赖
+				- spring依赖
+				- aspectj依赖
+
+			    3.创建目标类：接口和他的实现类。
+			      要做的是给类中的方法增加功能。
+
+			    4.创建切面类：
+				- 在类的上面加入@Aspect
+				- 在类中定义方法，方法就是切面要执行的功能代码
+				  在方法上面加入aspectj中的通知注解，例如@Before
+				  还需要来指定切入点表达式execution()
+
+			    5.创建spring配置文件：声明对象，把对象交给容器统一管理
+
+			    6.创建测试类，从spring容器中获取目标对象（实际就是代理对象）
+			      通过代理执行方法，实现aop的功能增强。
+
+		5.切面类方法定义的要求：
+			方法的定义要求：
+			     * 1.公共方法：public
+			     * 2.方法没有返回值
+			     * 3.方法名称自定义
+			     * 4.方法可以有参数也可以没有参数
+			     *      如果有参数，参数不是自定义的，有几个参数类型可以使用。
+
+		6.需要在xml文件中声明自动代理生成器：使用aspectj框架内部的功能，创建目标对象的代理对象。
+			创建代理对象是在内存中实现的，修改目标对象的内存中的结构，创建代理对象，
+			所以代理对象就是一个被修改后的目标对象。
+
+			<aop:aspectj-autoproxy />：会把spring容器中所有的(目标对象)一次性都生成代理对象。(普通对象)不变。
+
+		7.通知方法中的参数：JoinPoint
+		     * JoinPoint：代表业务方法，需要加入切面功能的业务方法。
+		     *      作用是：可以在通知方法中获取方法执行时的信息，例如方法名称，方法的实参等。
+		     *      如果你的切面功能中需要用到方法的信息，就加入JoinPoint。
+		     *      这个JoinPoint参数的值是由框架赋予的，必须是第一个位置的参数。
+
+23.JdbcTemplate（实例）
+	- spring提供的用于操作JDBC的工具类，类似：DBUtil。
+	  依赖 连接池(DateSource/数据源)。
+	
+	1.环境搭建
+		1.1 创建表
+			create database spring;
+			use spring;
+			create table user(id int primary key auto_increment,
+					    username varchar(50),
+					    password varchar(32)
+					    );
+			insert into user(username,password) values('jack','1234');
+			insert into user(username,password) values('rose','5678');
+
+		1.2 导入jar包
+			11个：
+				核心：4+1
+				spring jdbc实现
+				spring tx(事务)实现
+				mysql驱动
+				c3p0连接池
+				dbcp连接池
+				dbcp依赖
+
+		1.3 创建javabean
+			实例中a_domain包下的User类
+			public class User {
+				private Integer id;
+				private String username;
+				private String password;
+
+	2.使用api（了解）
+
+		//1.创建数据源(连接池)dbcp
+		BasicDataSource dataSource=new BasicDataSource();
+		// - 基本4项(注册驱动以及连接数据库)
+		dataSource.setDriverClassName("com.mysql.cj.jdbc.Driver");
+		dataSource.setUrl("jdbc:mysql://localhost:3306/spring? useUnicode=true&characterEncoding=utf8&serverTimezone=GMT");
+		dataSource.setUsername("root");
+		dataSource.setPassword("hxr001223");
+		
+		//2.创建模板
+		JdbcTemplate jdbcTemplate=new JdbcTemplate();
+		jdbcTemplate.setDataSource(dataSource);
+		
+		//3.通过api操作
+		jdbcTemplate.update("insert into user(username,password) values(?,?)","Tom","998");
+
+		具体看实例
+
+	3.配置DBCP
+		<!-- 创建数据源,注意：&需要用转义字符&amp;代替 -->		
+			<bean id="dataSourceId" class="org.apache.commons.dbcp.BasicDataSource">
+				<property name="driverClassName" value="com.mysql.cj.jdbc.Driver"></property>
+				<property name="url" value="jdbc:mysql://localhost:3306/spring? useUnicode=true&amp;characterEncoding=utf8&amp;serverTimezone=GMT"></property>
+				<property name="username" value="root"></property>
+				<property name="password" value="hxr001223"></property>
+			</bean>
+					
+		<!-- 创建模板 ,需要注入数据源-->
+			<bean id="jdbcTemplateId" class="org.springframework.jdbc.core.JdbcTemplate">
+				<property name="dataSource" ref="dataSourceId"></property>
+			</bean>		
+		
+		<!-- 配置Dao -->
+		  	<bean id="userDaoId" class="com.jdbctemplate.c_dbcp.UserDao">
+		  		<property name="jdbcTemplate" ref="jdbcTemplateId"></property>
+		  	</bean>
+
+	4.配置C3P0
+		<!-- 创建数据源c3p0,注意：&需要用转义字符&amp;代替 -->		
+			<bean id="dataSourceId" class="com.mchange.v2.c3p0.ComboPooledDataSource">
+				<property name="driverClass" value="com.mysql.cj.jdbc.Driver"></property>
+				<property name="jdbcUrl" value="jdbc:mysql://localhost:3306/spring? useUnicode=true&amp;characterEncoding=utf8&amp;serverTimezone=GMT"></property>
+				<property name="user" value="root"></property>
+				<property name="password" value="hxr001223"></property>
+			</bean>
+					
+		<!-- 创建模板 ,需要注入数据源-->
+			<bean id="jdbcTemplateId" class="org.springframework.jdbc.core.JdbcTemplate">
+				<property name="dataSource" ref="dataSourceId"></property>
+			</bean>		
+		
+		<!-- 配置Dao -->
+		  	<bean id="userDaoId" class="com.jdbctemplate.d_c3p0.UserDao">
+		  		<property name="jdbcTemplate" ref="jdbcTemplateId"></property>
+		  	</bean>
+
+		注意：dbcp与c3p0的区别：创建数据源使用到的类不同，注入数据源时的set方法不同。
+
+	5.使用JdbcDaoSupport
+		JdbcDaoSupport类已经获取到了jdbc模板，所以这里直接this.getJdbcTemplate()就能获取到模板
+		this.getJdbcTemplate().update(sql, args);
+		this.getJdbcTemplate().query("select * from user", BeanPropertyRowMapper.newInstance(User.class));
+
+		xml配置：
+		<!-- 创建数据源c3p0,注意：&需要用转义字符&amp;代替 -->		
+			<bean id="dataSourceId" class="com.mchange.v2.c3p0.ComboPooledDataSource">
+				<property name="driverClass" value="com.mysql.cj.jdbc.Driver"></property>
+				<property name="jdbcUrl" value="jdbc:mysql://localhost:3306/spring? useUnicode=true&amp;characterEncoding=utf8&amp;serverTimezone=GMT"></property>
+				<property name="user" value="root"></property>
+				<property name="password" value="hxr001223"></property>
+			</bean>
+					
+		<!-- 配置Dao 
+			- Dao 继承 JdbcDaoSupport之后只需要注入数据源，底层将自动创建模板
+		-->
+		  	<bean id="userDaoId" class="com.jdbctemplate.e_jdbcdaosupport.UserDao">
+		  		<property name="dataSource" ref="dataSourceId"></property>
+		  	</bean>
+
+	6.配置properties
+		properties文件：
+			jdbc.driverClass=com.mysql.cj.jdbc.Driver
+			jdbc.user=root
+			jdbc.password=hxr001223
+
+		xml文件：
+			<!-- 加载配置文件 
+				"classpath:"前缀表示src路径下
+				在配置文件之后可以通过 ${key} 获取内容
+			-->		
+			<context:property-placeholder location="classpath:com/jdbctemplate/f_properties/jdbcInfo.properties"/>
+					
+			<!-- 创建数据源c3p0,注意：&需要用转义字符&amp;代替 -->		
+			<bean id="dataSourceId" class="com.mchange.v2.c3p0.ComboPooledDataSource">
+				<property name="driverClass" value="${jdbc.driverClass}"></property>
+				<property name="jdbcUrl" value="jdbc:mysql://localhost:3306/spring?useUnicode=true&amp;characterEncoding=utf8&amp;serverTimezone=GMT"></property>
+				<property name="user" value="${jdbc.user}"></property>
+				<property name="password" value="${jdbc.password}"></property>
+			</bean>
+
+24.事务管理介绍（实例）
+	1.导入jar包：
+		spring-tx-4.3.16.RELEASE.jar
+
+	2.三个顶级接口
+		- PlatformTransactionManager.class   平台事务管理器，spring要管理事务，必须使用事务管理器
+			进行事务配置时，必须配置事务管理器。
+
+		- TransactionDefinition.class   事务详情（事务定义、事务属性），spring用于确定事务具体详情的，
+						例如：隔离级别、是否只读、超时时间等
+			进行事务配置时，必须配置详情，spring将配置项封装到该对象实例
+			
+		- TransactionStatus.class   事务状态，spring用于记录当前事务运行状态，例如：是否由保存点，事务是否已经完成。
+			spring底层根据事务状态进行相应的操作，与我们没关系
+
+	3.PlatformTransactionManager 事务管理器
+		- 导入jar包，需要的是平台事务管理器的实现类：
+			spring-jdbc-4.3.16.RELEASE.jar；
+			spring-orm-4.3.16.RELEASE.jar
+
+		- 常见的事务管理器：
+			DataSourceTransactionManager   jdbc开发时事务管理器，采用jdbcTemplate;
+			HibernateTransactionManager    hibernate开发时事务管理器，整合hibernate
+
+		- 方法详情：
+			TransactionStatus getTransaction(TransactionDefinition definition)   事务管理器通过“事务详情”获得“事务状态”，从而去管理事务
+			void commit(TransactionStatus status)   根据事务状态来提交
+			void rollback(TransactionStatus status)   根据事务状态来回滚
+		
+	4.TransactionStatus  事务状态
+		- 事务状态相关的方法：
+			boolean isNewTransaction()    是否是新的事务
+			boolean hasSavepoint()        是否有保存点
+			void setRollbackOnly()        设置回滚
+			boolean isRollbackOnly()      是否回滚
+			void flush()                  刷新
+			boolean isCompleted()         是否完成
+
+	5.TransactionDefinition   事务详情
+		- 相关方法
+			String getName()		配置事务详情名称。
+			boolean isReadOnly()		是否只读（一般情况下，增删改为读写型的，而查询属于只读型）
+			int getTimeout()		获得超时时间
+			int getIsolationLevel		获取隔离级别
+			int getPropagationBehavior()	获取传播行为
+		- 常量
+			final int TIMEOUT-DEFAULT	默认的超时时间（默认值为-1）。使用数据库底层的超时时间
+			等
+
+		传播行为：
+			在两个业务之间，如何共享事务。详情如下
+				- required  必须【默认值】
+					支持当前事务，A如果有事务，B将使用该事务。
+					如果A没有事务，B将创建一个新事务。
+				- supports  支持
+					支持当前事务，A如果有事务，B将使用该事务。
+					如果A没有事务，B将以非事务执行。
+				- mandatory  强制
+					支持当前事务，A如果有事务，B将使用该事务。
+					如果A没有事务，B将抛异常。
+				- requires_new  必须为新
+					如果A有事务，将A的事务挂起，B创建一个新的事务。
+					如果A没有事务，B仍然创建一个新的事务。
+				- not_supported  不支持
+					如果A有事务，将A的事务挂起，B将以非事务执行。
+					如果A没有事务，B仍然以非事务执行。
+				- never  从不
+					如果A有事务，B将抛异常。
+					如果A没有事务，B将以非事务执行。
+				- nested  嵌套
+					A和B底层采用保存点机制，形成嵌套事务
+
+			需掌握：required、requires_new、supports
+
+	6.案例：转账
+		- 搭建环境（事务管理1中实例）
+			* 创建表
+				create table account(
+				     id int primary key auto_increment,
+				     username varchar(50),
+				     money int);
+				insert into account(username,money) values('jack','10000');
+				insert into account(username,money) values('rose','10000');
+				 select * from account;
+					+----+----------+-------+
+					| id | username | money |
+					+----+----------+-------+
+					|  1 | jack     | 10000 |
+					|  2 | rose     | 10000 |
+					+----+----------+-------+
+			* 导入jar包
+				核心：4+1
+				aop：4个（aop联盟、spring aop实现、aspectj规范、spring aspect实现）
+				数据库：2个（jdbc/tx）
+				数据库驱动：1个（mysql-connector-java-8.0.19.jar）
+				连接池：c3p0
+
+			* dao层：
+				public class AccountDaoImp extends JdbcDaoSupport implements AccountDao {
+					@Override
+					public void in(String inner, Integer money) {
+						// TODO Auto-generated method stub
+						this.getJdbcTemplate().update("update account set money=money+? where username=?", money,inner);
+					}
+
+					@Override
+					public void out(String outer, Integer money) {
+						// TODO Auto-generated method stub
+						this.getJdbcTemplate().update("update account set money=money-? where username=?", money,outer);
+					}
+				}
+
+			* service层：
+				public class AccountServiceImp implements AccountService {
+					private AccountDao accountDao;
+
+					public void setAccountDao(AccountDao accountDao) {
+						this.accountDao = accountDao;
+					}
+
+					@Override
+					public void transfer(String outer, String inner, Integer money) {
+						accountDao.out(outer, money);
+						accountDao.in(inner, money);
+					}
+				}
+
+			* spring配置文件：
+				<!-- datasource -->
+				  <bean id="dataSource" class="com.mchange.v2.c3p0.ComboPooledDataSource">
+					<property name="driverClass" value="com.mysql.cj.jdbc.Driver"></property>
+					<property name="jdbcUrl" value="jdbc:mysql://localhost:3306/spring? useUnicode=true&amp;characterEncoding=utf8&amp;serverTimezone=GMT"></property>
+					<property name="user" value="root"></property>
+					<property name="password" value="hxr001223"></property>
+				  </bean>
+					  
+				<!-- dao -->
+				  <bean id="accountDao" class="com.one.dao.impl.AccountDaoImp">
+					<property name="dataSource" ref="dataSource"></property>
+				  </bean>
+					  
+				<!-- service -->
+				  <bean id="accountService" class="com.one.service.impl.AccountServiceImp">
+					<property name="accountDao" ref="accountDao"></property>
+				  </bean>
+
+			* 测试：
+				public class TestOne {
+					public static void main(String[] args) {
+						String xmlPath="applicationContext.xml";
+						ApplicationContext applicationContext=new ClassPathXmlApplicationContext(xmlPath);
+						AccountService accountService=(AccountService) applicationContext.getBean("accountService");
+						accountService.transfer("jack", "rose", 1000);
+					}
+
+				}
+
+		- 手动管理事务（了解内容，事务管理2中实例）
+			* spring底层使用 TransactionTemplate 事务模板进行操作
+			* 操作：
+				1.service层需要获得 TransactionTemplate 事务模板
+				2.spring需要配置模板，并注入给service
+				3.模板需要注入事务管理器
+				4.配置事务管理器：DataSourceTransactionManager，需要注入DataSource
+			
+			* 修改service：
+				//获取TransactionTemplate 事务模板，需要spring注入模板
+				private TransactionTemplate transactionTemplate;
+				public void setTransactionTemplate(TransactionTemplate transactionTemplate) {
+					this.transactionTemplate = transactionTemplate;
+				}
+				@Override
+				public void transfer(final String outer, final String inner, final Integer money) {
+					transactionTemplate.execute(new TransactionCallbackWithoutResult() {
+						protected void doInTransactionWithoutResult(TransactionStatus arg0) {
+							accountDao.out(outer, money);
+							accountDao.in(inner, money);
+						}
+					});
+				}
+			
+			* 修改spring配置文件：
+				<!-- service -->
+				  <bean id="accountService" class="com.one.service.impl.AccountServiceImp">
+					<property name="accountDao" ref="accountDao"></property>
+					<property name="transactionTemplate" ref="transactionTemplate"></property>
+				  </bean>
+				  
+				  <!-- 创建TransactionTemplate模板 -->
+				  <bean id="transactionTemplate" class="org.springframework.transaction.support.TransactionTemplate">
+					<property name="transactionManager" ref="txManager"></property>
+				  </bean>
+				  
+				  <!-- 配置事务管理器,管理器需要事务，事务从Connection获得，连接从DataSource获得 -->
+				  <bean id="txManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+					<property name="dataSource" ref="dataSource"></property>
+				  </bean>
+
+
+		- 工厂bean生产代理：半自动（事务管理3中实例）
+			* spring提供管理事务的代理工厂bean：TransactionProxyFactroyBean
+			* 操作：
+				1.getBean()获得代理对象
+				2.spring配置一个代理
+			* 事务定义参数 transactionAttributes
+				1.参数需要用<pros>进行配置
+				2.格式：PROPAGATION,ISOLATION,readOnly,-Exception,+Exception
+						PROPAGATION 传播行为
+						ISOLATION 隔离级别
+						readOnly 只读事务，不能进行修改操作
+						-Exception  发生这些异常回滚事务
+						+Exception  发生这些异常仍然提交事务
+					例如：<prop key="transfer">PROPAGATION_REQUIRED,ISOLATION_DEFAULT</prop>	 默认的传播行为和隔离级别   
+					
+			* spring配置：
+				<!-- service代理对象
+						1.proxyInterface 接口
+						2.target 目标类
+						3.TransactionManager 事务管理器
+						4.transactionAttributes 事务属性(事务详情)
+							prop.key :确定哪些方法使用当前事务配置
+							prop.text:用于配置事务详情
+								格式：PROPAGATION,ISOLATION,readOnly,-Exception,+Exception
+									       传播行为            隔离级别      是否只读      异常回滚           异常提交
+								例如：<prop key="transfer">PROPAGATION_REQUIRED,ISOLATION_DEFAULT</prop>	 默认的传播行为和隔离级别     
+				   -->
+				  <bean id="proxyAccountService" class="org.springframework.transaction.interceptor.TransactionProxyFactoryBean">
+					<property name="proxyInterfaces" value="com.one.service.AccountService"></property>
+					<property name="target" ref="accountService"></property>
+					<property name="transactionManager" ref="txManager"></property>
+					<property name="transactionAttributes">
+						<props>
+							<prop key="transfer">PROPAGATION_REQUIRED,ISOLATION_DEFAULT</prop>
+						</props>
+					</property>
+				  </bean>
+				  
+				  <!-- 配置事务管理器 -->
+				  <bean id="txManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+					<property name="dataSource" ref="dataSource"></property>
+				  </bean>
+
+			*测试（getBean()中获取的是代理对象）：
+				public static void main(String[] args) {
+					String xmlPath="com/one/applicationContext.xml";
+					ApplicationContext applicationContext=new ClassPathXmlApplicationContext(xmlPath);
+					AccountService accountService=(AccountService) applicationContext.getBean("proxyAccountService");
+					accountService.transfer("jack", "rose", 1000);
+				}
+					
+		- AOP配置基于xml【掌握】（事务管理4中实例）
+			* 在spring的xml中配置了aop，自动生产代理，并进行事务的管理。
+			* 操作：
+				1.配置事务管理器
+				2.配置事务详情
+				3.配置aop
+			* 配置事务通知需要配置如下内容：
+				xmlns:tx="http://www.springframework.org/schema/tx"以及
+					http://www.springframework.org/schema/tx 
+					http://www.springframework.org/schema/tx/spring-tx.xsd"
+
+			* spring配置：
+				<!-- 事务管理 -->
+				  <!-- 1.事务管理器 -->
+				  <bean id="txManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+					<property name="dataSource" ref="dataSource"></property>
+				  </bean>
+				  <!-- 2.配置通知（事务的通知），在aop筛选的基础上，对选中的方法确定使用什么样的事务，例如：A和C方法读写，B方法只读
+						<tx:attributes> 用于配置事务详情（事务属性）
+						<tx:method name=""/> 详情的具体配置
+				   -->
+				  <tx:advice id="txAdvice" transaction-manager="txManager">
+					<tx:attributes>
+						<tx:method name="transfer" propagation="REQUIRED" isolation="DEFAULT"/>
+					</tx:attributes>
+				  </tx:advice>
+				  <!-- 3.aop编程 -->
+				  <aop:config>
+					<aop:advisor advice-ref="txAdvice" pointcut="execution(* com.one.service.impl.*.*(..))"/>
+				  </aop:config>
+
+		- AOP配置基于注解【掌握】（事务管理5中实例）
+			* 操作：
+				1.配置事务管理器，并将事务管理器交予spring
+				2.在目标类或目标方法添加注解即可 @Transactional
+				   (在类上添加注解则对类中的所有方法都用事务，对单个方法添加注解则对当前方法使用事务)
+
+			* spring配置：
+				 <!-- 事务管理 -->
+				  <!-- 1.配置事务管理器 -->
+				  <bean id="txManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+					<property name="dataSource" ref="dataSource"></property>
+				  </bean>
+				  <!-- 2.将管理器交予spring
+						- transaction-manager 将管理器交予spring
+				  -->
+				  <tx:annotation-driven transaction-manager="txManager"/>
+
+			* service层（实现类）：
+				@Transactional   <------只有此处变动
+				public class AccountServiceImp implements AccountService {
+					------此处省略------
+				}
+
+				如需要配置事务详情：
+					@Transactional(propagation=Propagation.REQUIRED,isolation=Isolation.DEFAULT......) <----在注解后的括号中添加事务详情即可
+					public class AccountServiceImp implements AccountService {
+							------此处省略------
+					}
+
+25.配置文件的包含关系（实例）
+	在大型项目中，类的数量非常多，因此一个配置文件是不够的，此时我们需要创建多个配置文件，比如一个模块一个配置文件等。
+	此时我们需要创建一个spring的主配置文件来包含其他模块的配置文件。
+
+	主配置文件：包含其他的配置文件，主配置文件一般不定义对象。
+        语法：<import resource="其他配置文件的路径" />
+        关键字："classpath:"表示类路径（class文件所在的目录），在spring的主配置文件中要指定其他文件的位置，
+                需要使用classpath，告诉spring到哪去加载读取文件。
+
+		在包含关系的配置文件中，可以使用通配符（*：表示任意字符）  如：<import resource="classpath:bao5/spring-*.xml" >
+		注意：主配置文件不能包含在通配符的范围内。
+
+	例如：
+		Student实体类：
+			public class Student5 {
+			    private String name;
+			    private int age;
+			    private School school;
+			    。。。。。。
+
+		School实体类：
+			public class School {
+			    private String name;
+
+			    public void setName(String name) {
+				this.name = name;
+			    }
+
+			    @Override
+			    public String toString() {
+				return "School{" +
+					"name='" + name + '\'' +
+					'}';
+			    }
+			}
+
+		student模块的配置文件：
+			    <!--
+				student模块所有bean的声明
+			    -->
+			    <!-- 实现byName -->
+			    <bean id="myStudent" class="com.bjpowernode.bao5.Student5" autowire="byName">
+				<property name="name" value="小希"></property>
+				<property name="age" value="20"></property>
+			    </bean>
+
+			    <!-- 实现byType -->
+			    <bean id="student2" class="com.bjpowernode.bao5.Student5" autowire="byType">
+				<property name="name" value="小明"></property>
+				<property name="age" value="16"></property>
+			    </bean>
+
+		school模块的配置文件：
+			    <!--
+				school模块所有bean的声明，school模块的配置文件
+			    -->
+			    <bean id="school" class="com.bjpowernode.bao5.School">
+				<property name="name" value="清华"/>
+			    </bean>
+
+		spring的主配置文件：
+			<!-- 包含关系的配置文件 -->
+			<!-- 将其他配置文件导入进来 -->
+			<import resource="classpath:bao5/spring-school.xml"/>
+			<import resource="classpath:bao5/spring-student.xml"/>
+			//"classpath:"表示类路径（class文件所在的目录）
+
+
+			(如果使用通配符：<import resource="classpath:bao5/spring-*.xml" >
+			只需要这一段代码就能把 "classpath:bao5/spring- "开头的所有配置文件全部导进来)
+
+26.把mybatis和spring集成在一起（重点，idea实例：06）
+	为什么使用ioc可以把spirng和mybatis集成在一起，像一个框架一样？
+	答：因为ioc能创建对象，可以把mybatis框架中的对象交给spring统一创建，开发人员从spring中获取对象，
+	    这样开发人员就不用同时面对两个或多个框架了，就面对一个spring即可。
+=================================================================================
+	想要集成mybatis和spring，我们需要让spring创建以下对象：
+	1.独立的连接池类的对象，使用阿里的druid连接池。
+	2.SqlSessionFactory对象。
+	3.创建出dao对象。
+
+	需要学习的就是上面三个对象的创建语法，使用xml的bean标签。
+
+	连接数据库的信息：
+		driver=com.mysql.cj.jdbc.Driver
+		url=jdbc:mysql://localhost:3306/mybatis? useUnicode=true&characterEncoding=utf8&serverTimezone=GMT
+		user=root
+		password=hxr001223
+	注意：如果在xml文件中填写连接数据库的信息，"&"需要用"&amp;"转译。
+
+	创建独立的连接池对象：
+		<!-- 声明数据源DataSource,作用是连接数据库 -->
+		    <bean id="myDataSource" class="com.alibaba.druid.pool.DruidDataSource"
+			  init-method="init" destroy-method="close">
+			<!-- set注入给DruidDataSource提供连接数据库的信息 -->
+			<property name="url" value="jdbc:mysql://localhost:3306/mybatis? useUnicode=true&amp;characterEncoding=utf8&amp;serverTimezone=GMT"/>
+			<property name="username" value="root"/>
+			<property name="password" value="hxr001223"/>
+			<property name="maxActive" value="20"/><!-- 该属性表示数据库最大连接数 -->
+		    </bean>
+
+	创建SqlSessionFactory对象：
+		<!-- 声明mybatis中提供的SqlSessionFactoryBean类，这个类的内部是创建SqlSessionFactory对象的 -->
+		    <bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+			<!-- 使用set注入把数据库的连接池赋给dataSource属性 -->
+			<property name="dataSource" ref="myDataSource"/>
+			<!-- 声明mybatis主配置文件的位置
+				configLocation的属性是Resource类型，读取配置文件的。
+				使用value赋值，指定文件的路径，使用classpath:表示文件的位置。
+			 -->
+			<property name="configLocation" value="classpath:mybatis.xml"/>
+		    </bean>
+
+	创建dao对象：
+		<!-- 创建dao对象，使用SqlSession的getMapper(StudentDao.class)
+			    MapperScannerConfigurer：在内部调用getMapper()生成每个dao接口的代理对象。
+		    -->
+		    <bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+			<!-- 指定SqlSessionFactory对象的id -->
+			<property name="sqlSessionFactoryBeanName" value="sqlSessionFactory"/>
+			<!-- 指定包名，包名是dao接口所在的包名，如果有多个包可以用","进行分隔
+				MapperScannerConfigurer会扫描这个包中的所有接口，把每个接口都执行
+				一次getMapper()方法得到每个接口的dao对象。
+				创建好的dao对象会放入到spring容器中
+				dao对象的id就是接口名称（首字母小写）
+			-->
+			<property name="basePackage" value="com.bjpowernode.dao"/>
+		    </bean>
+
+	关于spring和mybatis整合一起使用时的事务提交问题：
+		spirng和mybatis整合在一起使用时，事务是自动提交的，无需执行SqlSession.commit()。
+
+27.spring的事务处理
+	回答问题：
+		1.什么是事务？
+		答：事务是指一组sql语句的集合，集合中有多条sql语句，这些sql语句的执行要么都成功，要么都失败，作为一个整体执行。
+		
+		2.在什么时候想到使用事务？
+		答：当我操作涉及到多个表，或者多个sql语句的增删改，需要保证这些语句都是成功才能完成我的功能，或者都失败保证
+		    操作是符合要求的，这个时候需要使用事务。例如转账操作。
+
+		    在java代码中写程序，控制事务，此时事务应该放在哪里呢？
+		    答：放在service类的业务方法上，因为业务方法会调用多个dao方法，执行多个sql语句。
+
+		3.通常使用JDBC访问数据库，还有mybatis访问数据库时怎么处理事务？
+		答：jdbc访问数据库，处理事务   Connection conn; conn.commit();  conn.rollback();
+		    mybatis访问数据库，处理事务  SqlSession.commit(); SqlSession.rollback();
+
+		4.3问题中事务的处理方式有哪些不足？
+		答：1.不同的数据库的访问技术、处理事务的对象、处理事务的方法不同。
+		    2.需要掌握多种数据库中事务的处理逻辑，例如什么时候提交事务，什么时候回滚事务等。
+		    3.需要知道处理事务的多种方法。
+
+		    总结：就是多种数据库的访问技术，有不同的事务处理的机制，对象，方法。
+
+		5.怎么解决不足？
+		答：spring提供了一种处理事务的统一模型，能使用统一的步骤，完成多种不同数据库访问技术的事务处理。
+
+		6.处理事务，需要怎么做？
+		答：spring处理事务使用的步骤都是固定的，把事务相关的信息提供给spring就可以了。
+
+		    1.spring内部提交、回滚事务，使用的是事务管理器对象，代替你来完成commit、rollback。
+		      事务管理器是一个接口和众多实现类。
+		      接口：PlatformTransactionManager，定义了事务的重要方法：commit、rollback。
+		      实现类：spring把每一种数据库访问技术对应的事务处理类都创建好了。
+				mybatis访问数据库----------spring创建好的是DateSourceTransactionManager
+				hibernate访问数据库--------spring创建好的是HibernateTransactionManager
+
+		      怎么使用：你需要告诉spring使用的是哪种数据库的访问技术。
+		      怎么告诉spring：声明数据库访问技术对应的事务管理器实现类，在spring的配置文件中使用<bean>声明就可以了。
+		      例如，你要使用mybatis访问数据库，你应该在xml配置文件中：
+				<bean id="xxx" class="...DateSourceTransactionManager">
+
+		    2.你的业务方法需要什么事务呢，说明需要事务的类型。
+		      控制事务的三个方面：
+			1.事务的隔离级别：有4个值，mysql默认是"可重复读",oracle默认是"读已提交"。
+			2.事务的超时时间：表示一个方法最长的执行时间，如果超过了这个时间，事务就回滚。该时间以秒为单位，整数值，默认是"-1"。
+			3.事务的传播行为：控制业务方法是否有事务，是什么样的事务。
+				7个传播行为：表示你的业务方法在调用时，事务在方法之间是如何使用的。
+				注：以下例子的前提为：A方法中调用B方法，在B方法中指定以下的各种传播行为。
+					- required  必须【默认值】
+						支持当前事务，A如果有事务，B将使用该事务。
+						如果A没有事务，B将创建一个新事务。
+					- requires_new  必须为新
+						如果A有事务，将A的事务挂起，B创建一个新的事务。
+						如果A没有事务，B仍然创建一个新的事务。
+					- supports  支持
+						支持当前事务，A如果有事务，B将使用该事务。
+						如果A没有事务，B将以非事务执行。
+					- mandatory  强制
+						支持当前事务，A如果有事务，B将使用该事务。
+						如果A没有事务，B将抛异常。
+					- not_supported  不支持
+						如果A有事务，将A的事务挂起，B将以非事务执行。
+						如果A没有事务，B仍然以非事务执行。
+					- never  从不
+						如果A有事务，B将抛异常。
+						如果A没有事务，B将以非事务执行。
+					- nested  嵌套
+						A和B底层采用保存点机制，形成嵌套事务
+
+				需掌握：required、requires_new、supports
+
+		    3.spring提交事务、回滚事务的时机：
+			1.当你的业务方法执行成功，没有异常抛出，方法执行完毕后spring自动提交事务。
+			2.当你的业务方法抛出运行时异常，spring自动执行回滚。
+			3.当你的业务方法抛出编译时异常，spring自动提交事务。
+
+	总结spring的事务：
+		1.管理事务的是事务管理器和它的实现类。
+		2.spring的事务是一个统一的模型。
+			- 指定要使用的事务管理器实现类，使用<bean>.
+			- 指定哪些类，哪些方法需要加入事务的功能
+			- 指定方法需要的隔离级别、传播行为、超时时间
+
+		你需要告诉spring，你的项目中类信息、方法的名称、方法的事务传播行为。
+
+	spring框架中提供的事务处理方案
+		1.适合中小项目使用的，注解方案。
+			  spring框架自己用aop实现给业务方法增加事务的功能，使用@Transactional注解增加事务。
+			  @Transactional注解是spring框架自己的注解，放在public方法的上面，表示当前方法具有事务。
+			  可以给注解的属性赋值，表示具体的隔离级别，传播行为，异常信息等。
+			  propagation：用来设置事务的传播行为，默认为Propagation.REQUIRED。
+			  isolation：用来设置事务的隔离级别，默认为isolation.DEFAULT。
+
+			  使用@Transactional的步骤：
+			  1.需要声明事务管理器对象
+			    <bean id="xxx" class="DataSourceTransactionManager"/>
+
+			  2.开启事务的注解驱动，告诉spring框架，我要使用注解的方式管理事务。
+			    spring使用aop机制，创建@Transactional所在的类代理对象，给方法加入事务的功能。
+			    spring给业务方法加入事务：
+				在你的业务方法执行前，先开启事务，在业务方法执行完毕之后提交事务或回滚事务，使用aop的环绕通知。
+
+			  3.在你的方法上面加入@Transactional注解。
+
+		2.适合大型项目，有很多的类、方法，需要大量的配置事务，使用aspectj框架功能，在spring配置文件中
+		  声明类、方法需要的事务。这种方式能让业务方法和事务配置完全分离。
+			
+		  实现步骤：都是在xml配置文件中实现。
+			  1.要使用的是aspectj框架，需要加入aspectj框架的依赖。
+				<dependency>
+				      <groupId>org.springframework</groupId>
+				      <artifactId>spring-aspects</artifactId>
+				      <version>5.2.4.RELEASE</version>
+				</dependency>
+
+			  2.声明事务管理器对象
+
+			  3.声明方法需要的事务类型（配置方法的事务属性【隔离级别、传播行为、超时时间】）
+
+			  4.配置aop：指定哪些类要创建代理。
+
+28.实例：电商购买商品（代码在idea实例中07和08）
+	本例要实现购买商品，模拟用户下订单，向订单添加销售记录，从商品表减少库存。
+	07实例中使用@Transactional注解添加事务。
+	08实例中使用aspectj添加事务。
+
+	07中xml配置文件中重点：
+		<!-- 声明事务管理器 -->
+		    <bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+			<!-- 连接数据库，指定数据源 -->
+			<property name="dataSource" ref="dataSource"/>
+		    </bean>
+
+		    <!-- 开启事务注解驱动，告诉spring使用注解管理事务，创建代理对象
+			transaction-manager：事务管理器对象的id。
+		     -->
+		    <tx:annotation-driven transaction-manager="transactionManager"/>
+
+	08中xml配置文件中重点：
+		<!-- 声明式事务处理，和源代码完全分离 -->
+		    <!-- 1.声明事务管理器 -->
+		    <bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+			<property name="dataSource" ref="dataSource"/>
+		    </bean>
+
+		    <!-- 2.声明业务方法的事务属性 -->
+		    <tx:advice id="myAdvice" transaction-manager="transactionManager">
+			<!-- tx:attributes:配置事务属性
+			     tx:method：表示给具体的方法配置事务属性，该标签可以有多个，分别给不同的方法设置事务属性。
+			 -->
+			<tx:attributes>
+			    <!-- name：方法的名称，有两种方式表达：
+					1.完整的方法名，不带有包和类；
+					2.方法名可以使用通配符"*"表示任意字符；
+			    -->
+			    <tx:method name="buy" propagation="REQUIRED" isolation="DEFAULT"
+				       rollback-for="java.lang.NullPointerException,com.bjpowernode.excep.NotEnoughException"/>
+			</tx:attributes>
+		    </tx:advice>
+
+		    <!-- 3.配置aop -->
+		    <aop:config>
+			<!-- 配置切入点表达式：指定哪些包中的类，要使用事务
+			    id:切入点表达式的名称
+			    expression:切入点表达式，指定哪些类要使用事务，aspectj会创建代理对象。
+			 -->
+			<aop:pointcut id="servicePt" expression="execution(* *..service..*.*(..))"/>
+			<!-- 配置增强器，作用是关联advice和pointcut -->
+			<aop:advisor advice-ref="myAdvice" pointcut-ref="servicePt"/>
+		    </aop:config>
+
+29.在web项目中怎么使用容器对象（idea中实例09）
+	1.做javase项目时是有main方法的，可以在main方法中创建容器对象。
+
+	2.web项目是在tomcat服务器上运行的，tomcat一旦启动，项目是一直运行的。
+
+	需求：
+	web项目中spring容器对象只需要创建一次，并且每个servlet都需要拿到这个对象。
+		只需要把容器对象放入到全局作用域中ServletContext中就行了。
+
+	怎么实现呢？
+		使用监听器，当全局作用域对象被创建时，创建容器，存入ServletContext。
+
+		监听器作用：
+		1.创建容器对象，执行 ApplicationContext applicationContext=new ClassPathXmlApplicationContext(xmlPath);
+		2.把容器对象放入到ServletContext。执行 ServletContext.setAttribute(key,applicationContext)
+
+		监听器可以自己创建，也可以使用框架中提供好的ContextLoaderListener。如果用框架提供好的监听器需要加依赖。
+
+		监听器在web.xml文件下注册：
+			<!-- 注册监听器ContextLoaderListener
+				监听器被创建对象后，会去读取/WEB-INF/applicationContext.xml
+				为什么要读取文件：因为在监听器中要创建ApplicationContext对象，需要加载配置文件。
+				/WEB-INF/applicationContext.xml就是监听器默认读取的spring配置文件的路径
+
+				可以修改默认的文件位置，使用context-param重新指定文件的位置
+
+				配置监听器：目的是创建spring容器对象，创建好容器对象后，就能把applicationContext.xml配置文件中
+					    所有的对象都创建好，用户发起请求就可以直接使用对象了。
+			     -->
+			    <context-param>
+				<!--
+				    contextConfigLocationL：用来表示配置文件的路径
+				    <param-value>：自定义配置文件的路径
+				 -->
+				<param-name>contextConfigLocation</param-name>
+				<param-value>classpath:applicationContext.xml</param-value>
+			    </context-param>
+			    <listener>
+				<listener-class>org.springframework.web.context.ContextLoaderListener</listener-class>  <!-- 注册监听器 -->
+			    </listener>
+
+		创建监听器后获取applicationContext对象的方式：
+			//在web项目中得到spring的容器对象
+			WebApplicationContext applicationContext=null;
+			//获取ServletContext中的spring容器对象，一个创建好的容器对象，拿来用就行了。使用框架中的方法.
+			applicationContext=WebApplicationContextUtils.getRequiredWebApplicationContext(getServletContext());
+
+
+
+									
+
+					
+
+

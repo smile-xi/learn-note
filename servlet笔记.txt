@@ -1,0 +1,734 @@
+MyEclipse中的Tomcat 5.x是自配的Tomcat9版本
+
+关于url-pattern的编写方式和路径总结：
+	1.路径的编写形式：
+		- <a href="/项目名/资源路径"></a>
+		- <form action="/项目名/资源路径"></form>
+		- 重定向：response.sendRedirect("/项目名/资源路径");
+		- Cookie设置path：cookie.setPath("/项目名/资源路径");
+
+		- 转发：request.getRequestDispatcher("/资源路径").forward(request,response);
+
+		- 欢迎页面：
+		       <welcome-file-list>
+			      <welcome-file>资源路径</welcome-file>
+		       </welcome-file-list>
+
+		- servlet路径：
+			  <servlet>
+				<servlet-name></servlet-name>
+				<servlet-class></servlet-class>
+			  </servlet>
+			  <servlet-mapping>
+				<servlet-name></servlet-name>
+				<url-pattern>/资源路径</url-pattern>
+			  </servlet-mapping>
+
+		- servletContext
+			ServletContext application=config.getServletContext();
+			application.getRealPath("/资源路径");
+
+	路径的编写分形式三类：
+		第一类：以/开始，加webapp名称。
+		第二类：以/开始，不加webapp名称。
+		第三类：不以/开始，也不需要加webapp名称。【差不多只有欢迎页面的设置属于该类】
+
+	2.url-pattern的编写方式：
+		- url-pattern可以编写多个
+		- 精确匹配：
+			<url-pattern>/hello</url-pattern>
+			<url-pattern>/system/hello</url-pattern>
+			//都可以访问到指定的文件
+		- 扩展匹配：
+			<url-pattern>/abc/*</url-pattern>
+			//地址栏填写访问路径时/abc/后面的路径任意怎么写都能访问到指定文件
+			例如：localhost:8080/项目名/abc/sadas/sdasd/asdafdfgdf
+		- 后缀匹配：
+			<url-pattern>*.abc</url-pattern>
+			//地址栏填写访问路径时可以随意填写，只要路径最后以.abc结尾就能访问到指定文件
+			例如：localhost:8080/项目名/sadas/sdasd/asdafdfgdf.abc
+		- 全部匹配：
+			<url-pattern>/*</url-pattern>
+			//地址栏填写访问路径时可以随意填写
+			例如：localhost:8080/项目名
+
+
+
+
+
+			
+		
+	 
+
+1.JavaEE是什么？
+      JavaEE是SUN公司提供的一套庞大的类库，帮助程序员完成企业级项目开发！
+
+2.JavaEE规范是什么？
+      JavaEE规范一个比较大的规范，JavaEE规范中包含13个子规范（每一个子规范下其实还有其他子规范）。
+
+3.浏览器、Web服务器、java程序、数据库如何连接在一起？
+
+      浏览器
+         |    通过http协议
+         | 
+      Web服务器
+         |    通过Servlet接口
+         |
+     服务器端的java程序
+         |    通过jdbc接口
+         |
+      数据库
+ 
+4.Servlet：
+      两个单词的合并，Serv表示服务器端，let表示小程序。
+
+5.关于webapp中的xml文件
+      一个webapp只有一个web.xml文件
+      web.xml文件主要配置请求路径和Servlet类名之间的绑定关系
+      web.xml文件在Tomcat服务器启动阶段被解析
+      web.xml文件解析失败会导致webapp启动失败
+      web.xml文件中的标签不能随意编写，因为Tomcat服务器早就知道该文件中编写了哪些标签
+      web.xml文件中的标签也是SUN公司指定的Servlet规范
+
+6.Servlet接口需要实现的方法有：
+        public void destroy(){}
+
+	public void init(ServletConfig config) throws ServletException {}
+
+	public String getServletInfo(){}
+
+	public ServletConfig getServletConfig(){}
+
+	public void service(ServletRequest request,ServletResponse response)throws IOException,ServletException{}
+
+7.Servlet中解决响应时字符编码问题
+        设置响应时的内容类型以及字符编码方式
+        response.setContentType("text/html;charset=utf-8");
+	注意：只有在获取响应流之前设置才有效果
+
+8.关于Servlet对象的生命周期
+      1.什么是生命周期？
+            生命周期表示一个java对象从最初被创建到最终被销毁，经历的所有过程。
+
+      2.Servlet对象的生命周期是谁来管理的？程序员可以干涉吗？
+            Servlet对象的生命周期，javaweb程序员是无权干涉的，包括Servlet对象的相关方法的调用，javaweb程序员也是无权干涉的。
+	    Servlet对象从最初的创建开始，方法的调用，以及最后Servlet对象的销毁，整个过程，都是由Web容器来管理的。
+	    Web Container管理Servlet对象的生命周期。
+
+      3.默认情况下，Servlet对象在Web服务器启动阶段不会被实例化。【若希望在Web服务器启动阶段实例化Servlet对象，需要进行特殊的设置】
+
+      4.描述Servlet对象的生命周期
+           (1)用户在浏览器地址栏上输入URL
+	   (2)web容器截取请求路径
+	   (3)web容器在容器上下文中找请求路径对应的Servlet对象
+	   (4)若没有找到对应的Servlet对象：通过web.xml文件中相关的配置信息，得到请求路径对应的Servlet完整类名，
+	                                   通过反射机制，调用Servlet类的无参数构造方法完成Servlet对象的实例化。
+                   [1]web容器调用Servlet对象的init方法完成初始化操作
+	           [2]web容器调用Servlet对象的service方法提供服务
+
+	      若找到对应的Servlet对象：web容器直接调用Servlet对象的service方法提供服务
+           (5)web容器关闭的时候/webapp重新部署的时候/该Servlet对象长时间没有用户再次访问的时候，web容器会将该Servlet对象销毁，
+	      在销毁对象之前，web容器会调用Servlet对象的destroy方法，完成销毁之前的准备。
+      
+      5.总结：
+           1.Servlet类的构造方法只执行一次
+	   2.Servlet对象的init方法只执行一次
+	   3.Servlet对象的service方法，只要用户请求一次，就执行一次。
+	   4.Servlet对象的destroy方法只执行一次
+
+      6.注意：
+           init方法执行的时候，Servlet对象已经被创建好了。
+	   destroy方法执行的时候，Servlet对象还没有被销毁，即将被销毁。
+
+      7.Servlet对象是单例，但不符合单例模式，只能被称为伪单例。（单实例，多线程）
+        真单例的构造方法是私有化的，Tomcat服务器是支持多线程的。
+	所有Servlet对象在单实例多线程的环境下运行。
+	那么Servlet对象中若有实例变量，并且实例变量涉及到修改操作，那么这个Servlet对象一定会存在线程安全问题，
+	不建议在Servlet对象中使用实例变量，尽量使用局部变量。
+
+      8.若希望在web服务器启动阶段实例化Servlet对象，需要在web.xml文件中进行相关的配置，例如：
+             <servlet>
+	         <servlet-name>HelloServlet</servlet-name>
+	         <servlet-class>com.HelloServlet</servlet-class>
+		 <load-on-startup>0</load-on-startup>               //在servlet标签中添加load-on-startup标签
+	     </servlet>
+	     <servlet-mapping>
+		 <servlet-name>HelloServlet</servlet-name>
+		 <url-pattern>/servlet/HelloServlet</url-pattern>
+	     </servlet-mapping>
+	  注意：load-on-startup标签中的自然数越小优先级越高。
+
+      9.Servlet对象实例化之后，这个Servlet对象被存储到哪里了？
+           大多数的Web容器都是将Servlet对象以及对应的url-pattern存储到Map集合中了；
+	   在Web容器中有这样一个Map集合：
+	       Map<String,Servlet>集合
+	       key               value
+               ----------------------------------------
+	       /login            LoginServlet对象引用
+	       /delete           DeleteServlet对象引用
+	       .......
+
+      10.服务器在启动的时候就会解析各个webapp的web.xml文件，做了什么？
+            将web.xml文件中的url-pattern和对应的Servlet完整类名存储到了Map集合中了；
+	    在Web容器中有这样一个Map集合：
+	       Map<String,String>集合
+	       key                               value
+	       ------------------------------------------------------
+	       /servlet/HelloServlet             com.HelloServlet
+	       /servlet/WelcomeServlet           com.WelcomeServlet
+	       ......
+
+9.Servlet接口中的这些方法编写什么代码？什么时候使用这些方法？
+      1.无参数构造方法（尽量别动构造方法）
+      2.init方法
+	      以上两个方法执行事件几乎是相同的，执行次数都是一次；
+	      构造方法执行的时候对象正在创建，init方法执行的时候对象已经创建；
+		   若系统要求在对象创建时刻执行一段特殊的程序，这段程序尽量写在init方法中。
+		   为什么不建议将代码编写到构造方法中呢？
+			存在风险！
+			当程序员填写构造方法的时候，可能会导致无参数构造方法不存在。
+		   
+		   Servlet中的init方法是SUN公司为javaweb程序员专门提供的一个初始化时刻，若希望在初始化时刻执行一段特殊的程序，
+		   这个程序可以填写到init方法，将来会被自动调用。
+
+      3.service方法
+		这个方法是必然要重写的，因为这个方法需要完成业务逻辑的处理，请求的处理，以及完成响应。
+		而且这个方法中的代码是最有价值的。
+		也是最难写的，因为最难编写的就是业务代码。
+
+      4.destroy方法
+		这个方法也是SUN公司为javaweb程序员提供的一个特殊的时刻，这个特殊的时刻被称为对象销毁时刻，
+		若希望在销毁时刻执行一段特殊的代码，需要将这段代码填写到destroy方法中，自动被容器调用。
+
+10.研究javax.servlet.ServletConfig接口：
+	1.javax.servlet.ServletConfig是接口
+
+	2.Tomcat服务器实现了Servlet规范，Tomcat服务器专门写了一个ServletConfig接口的实现类，
+	  实现类的完整类名：org.apache.catalina.core.StandardWrapperFacade(了解内容)
+
+        3.javaweb程序员在编程的时候，一直是面向ServletConfig接口去完成调用，不需要关心实现类。
+	
+	4.Tomcat服务器是一个实现了Servlet规范和JSP规范的容器。
+
+	6.ServletConfig到底是什么？
+		- ServletConfig是一个Servlet对象的配置信息对象，ServletConfig对象中封装了一个Servlet对象的配置信息。
+		  Servlet对象的配置信息在web.xml文件中。
+		- 一个Servlet对象对应一个ServletConfig对象。
+                   
+        7.将init方法上的ServletConfig参数移动到service方法中，因为我们程序员主要编写的方法是service方法，
+	  在service方法中我们可能需要用到ServletConfig！
+	        - 在init方法中完成：局部变量config赋值给实例变量config。
+		- 实现getServletConfig方法，提供公开的get方法目的是供子类使用。
+	
+	8.ServletConfig接口中常用的方法：
+	        - String getInitParameter(String name)  //通过初始化参数的name获取value
+		- Enumeration getInitParameterNames()   //获取所有初始化参数的name
+		- String getServletName()               //获取<servlet-name>servletname<servlet-name>中的servletname
+		- ServletContext getServletContext()    //获取【Servlet上下文】对象
+		
+11.研究javax.servlet.ServletContext接口：
+        1.ServletContext到底是什么？什么时候被创建？什么时候被销毁？一个web项目创建几个？
+		- ServletContext被翻译为：Servlet上下文
+		- 一个web项目只有一个ServletContext对象
+		- 一个web项目只有一个web.xml文件
+		- web.xml文件在服务器启动阶段被解析
+		- ServletContext在服务器启动阶段被实例化
+		- ServletContext对象在服务器关闭时被销毁
+		- ServletContext对应的是web.xml文件，是web.xml文件的代表
+		- ServletContext是所有Servlet对象四周环境的代表【在同一个web项目中，所有的Servlet对象共享同一个四周环境对象，该对象就是SercletContext】
+		- 所有的用户若想共享同一个数据，可以将这个数据放到ServletContext对象中
+		- ServletContext是多线程共享的对象，不介意进行修改操作。
+	       
+	2.ServletContext接口中有哪些常用的方法？
+		- String getInitParameter(String name)          //通过Servlet上下文初始参数的name获取value
+		- Enumeration getInitParameterNames()           //获取所有Servlet上下文初始参数的name
+ 
+		- String getRealPath(String path)               //以WebRoot为根目录获取文件的绝对路径
+		
+		- void setAttribute(String name,Object object)  //向ServletContext范围中添加数据
+		- Object getAttribute(String name)              //从ServletContext范围中获取数据
+		- void removeAttribute(String name)             //移除ServletContext范围中的数据
+
+	3.Servlet、ServletContext、ServletConfig之间的关系？
+		- 一个Servlet对象对应一个ServletConfig对象
+		- 所有的Servlet对象共享一个ServletContext对象
+
+        4.ServletContext范围可以完成跨用户传递数据。
+
+12.关于一个WebApp的欢迎页面的设置
+	1.欢迎页面怎么设置？
+		- 假设在WebRoot目录下创建login.html，想让login.html作为整个WebApp的欢迎页面，
+		  应该做这样的设置：<welcome-file-list>
+					 <welcome-file>login.html</welcome-file>
+				    </welcome-file-list>
+		- 假设在WebRoot目录下创建html目录，html目录中创建welcome.html，想让welcome.html作为欢迎页面，
+		  应该做这样的设置：<welcome-file-list>
+					 <welcome-file>html/welcome.html</welcome-file>
+				    </welcome-file-list>
+				    
+	2.为什么设置欢迎页面？
+		- 为了访问更方便，为了提高用户的体验
+		- 设置欢迎页面后，直接在浏览器地址栏上访问该webapp即可，会自动定位到欢迎页面
+
+	3.欢迎页面可以设置多个，越靠上的优先级越高。
+
+	4.注意：欢迎页面设置的时候，路径不需要以"/"开始
+
+	5.一个webapp的欢迎页面不一定是html资源，可以是任何一种类型的web资源（例如：Servlet）。
+
+	6.欢迎页面包括全局配置和局部配置:
+		全局配置：CATALINA_HOME/conf/web.xml
+		区部配置：CATALINA_HOME/webapps/webapp/WEB-INF/web.xml
+		注意：就近原则
+		        若一个页面的名称是：index.html/index.jsp/index.htm，这些都是默认的欢迎页面，在全局配置中已经配置过了。
+			而如果在局部配置中配置了欢迎页面，那么将不再使用全局配置的欢迎页面了。
+
+13.关于web开发中常见的错误代号
+	1.404
+             - Not Found【资源未找到：请求的资源路径写错了】
+	2.500
+	     - Server Inner Error【服务器内部错误：这种情况一般都是java程序出现异常】
+
+	以上的这些状态号是W3C制定的，所有浏览器和服务器都必须遵守
+
+	3.405
+	     - 浏览器发送的请求方式和后台的处理方式不同【get请求和post请求】
+
+	4.正常响应的HTTP协议状态码：200
+
+	5.在一些错误发生之后统一进行错误的处理，可以在web.xml文件中做以下配置：
+	        <error-page>
+		     <error-code>404</error-code>
+		     <location>/error.html</location>
+		</error-page>
+		<error-page>
+		     <error-code>500</error-code>
+		     <location>/error.html</location>
+		</error-page>
+		若出现404错误或500错误统一给用户显示error.html页面。
+
+14.HTTP协议
+	1.请求协议（包括四部分）
+		- 请求行    //包括：请求方式 URI 协议版本号
+		- 消息报头
+		- 空白行
+		- 请求体
+
+	2.响应协议（包括四部分）
+		- 状态行    //包括：协议版本号 状态码 状态描述信息
+		- 响应报头
+		- 空白行
+		- 响应体
+	
+	3.get请求和post请求的区别
+		- 什么情况下浏览器发送的时get请求，什么情况下时post请求？
+		     只有使用表单form，并且将form标签的method属性设置为post时才是
+		     post请求方式，其余剩下的全部都是get请求方式。
+
+		- get请求和post请求有什么区别
+		     get请求在请求行上提交数据，这种提交方式会显示在浏览器地址栏上
+		     post请求在请求体中提交数据，不会在浏览器地址栏上显示
+		     post请求提交的数据没有长度限制（可以提交大数据），get请求提交的数据有长度限制 
+		     get请求只能提交字符串，post请求可以提交任何类型的数据，包括视频...所以文件上传必须用post请求提交
+		     get请求最终的结果会被浏览器缓存收纳，而post请求最终的结果不会被浏览器缓存。（所以get请求效率高一些）
+
+		- get请求和post请求应当如何选择使用
+		     - 有敏感的数据必须使用post
+		     - 传送的数据不是普通字符串，必须使用post
+		     - 传送的数据非常多，使用post
+		     - 这个请求是为了修改服务器端，使用post
+
+		     - get请求多数情况下时从服务器读取资源，这个读取的资源短时间内不会发生变化，
+		       所以get请求最终被浏览器缓存起来了。
+		     - post请求是为了修改服务器的资源，而每一次修改结果都是不同的，最终结果没必要被浏览器缓存
+
+		     - 浏览器将资源缓存之后，缓存的资源是和某个特定的路径绑定在一起的，只要浏览器再次发送这个相同的路径，
+		       这个时候会去缓存中获取资源，不再访问服务器，以这种方式降低服务器的压力，提高用户体验。
+		       但是有的时候，我们不希望走缓存，希望每一次都访问服务器，可以在请求路径后面加入时间数，例如：
+		       http://ip:port/oa/system/login?timestamp=12312312.
+		       JS怎么获取毫秒数：new Date().getTime();
+                       JS获取当前路径：document.location
+
+15.模板方法设计模式
+	HttpServlet是一个典型的模板方法设计模式
+	HttpServlet是一个模板类
+	其中service(HttpServletRequest request,HttpServletResponse response)方法是典型的模板方法。
+	在该方法中定义了核心算法骨架，doGet，doPost......具体的实现步骤延迟到子类中完成。
+
+	模板方法设计模式的特点：
+		方法以"do"开始，例如：
+		                  doXXX
+				  doYYY
+				  doGet
+				  doPost
+
+        模板方法设计模式属于：行为型设计模式
+
+	模板方法设计模式的主要作用：
+		1.核心算法得到保护
+		2.核心算法得到复用
+		3.在不改变算法的前提下，可以重新定义算法步骤的具体实现
+
+16.研究javax.servlet.http.HttpServletRequest接口
+	1.HttpServletRequest是一个接口，Servlet规范中重要接口之一。
+	
+	2.继承关系：
+	      public interface HttpServletRequest extends ServletRequest{}
+
+	3.HttpServletRequest接口的实现类是由WEB容器负责实现的，Tomcat服务器有自己的实现。
+	  程序员只需要面向HttpServletRequest接口调用方法即可，不需要关心具体的实现。
+
+	4.HttpServletRequest这个对象中封装了哪些信息？
+		- 请求方式
+		- URI
+		- 协议版本号
+		- 表单提交的数据
+		......
+
+	5.HttpServletRequest一般变量的名字叫做：request，表示请求，HttpServletRequest对象代表一次请求，
+	  一次请求对应一个request对象，所以request对象的生命周期是短暂的。
+
+	  HttpServletRequest是一个怎样的范围？
+	      一次请求对应一个request对象，请求范围是极小的，request只能完成在同一次请求中传递数据。
+
+	6.HttpServletRequest接口中常用的方法：
+	     注意：表单提交的数据会自动封装到request对象中，request对象中有Map<String,String[]>集合存储这些数据。
+	           Map集合的key是name，value是一个字符串类型的一维数组。
+
+		- String getParameter(String name)          //通过key获取value这个一维数组中的首元素（使用最多）
+		- Map getParameterMap()                     //获取整个Map集合
+		- Enumeration getParameterNames()           //获取整个Map集合的所有key
+		- String[] getParameterValues(String name)  //通过key获取value
+		//以上方法仅用于表单中
+
+		- Object getAttribute(String name)         //向request范围中读取数据
+		- void setAttribute(String name,Object o)  //向request范围中添加数据
+		- void removeAttribute(String name)        //移除request范围中的数据
+
+		- RequestDispatcher getRequestDispatcher(String path)  //获取请求转发器对象，参数path代表需要跳转的servlet文件的路径
+
+		- void setCharacterEncoding(String env)
+
+		- String getRemoteAddr()         //获取访问的客户端的IP地址
+		- String getContextPath()        //获取webapp的根路径
+		- String getMethod()             //获取浏览器的请求方式
+		- String getRequestURI()         //获取请求的URI
+		- StringBuffer getRequestURL()   //获取请求的URL
+		- String getServletPath()        //获取当前servlet文件的路径
+
+		- Cookie[] getCookies()      //从request对象中获取所有提交的Cookie
+
+		- HttpSession getSession()                 //获取session对象，如果session对象不存在则会新建一个sesison对象
+		- HttpSession getSession(boolean create)   //如果传递true，则和不传参数效果一样；如果传递false，表示仅获取session对象，没有则返回null
+
+17.跳转
+	执行完AServlet之后，跳转到BServlet执行，将AServlet执行和BServlet执行放到同一个请求中，
+	必须使用跳转技术：forward（转发）
+		1.获取请求转发器对象
+		2.调用请求转发器的forward方法即可完成转发
+            
+	    forward方法的用法：
+		转发器对象.forward(request,response);
+
+	转发属于一次请求！
+
+18.关于项目中出现的中文乱码问题
+	1.乱码经常出现在什么位置上？
+		- 数据“传递”过程中的乱码
+		- 数据“展示”过程中的乱码
+		- 数据“保存”过程中的乱码
+	
+	2.数据保存过程中的乱码？
+		- 最终保存到数据库表中的时候，数据出现乱码
+		- 导致数据保存过程中的乱码包括以下两种情况：
+			第一种情况：在保存之前，数据本身就是乱码，保存到数据库表中的时候一定是乱码。
+			第二种情况：保存之前，数据不是乱码，但是由于数据库本身不支持简体中文，保存之后出现乱码。
+
+	3.数据展示过程中的乱码？
+		- 最终显示到网页上的数据出现中文乱码。
+		- 怎么解决？
+			设置响应的内容类型以及对应的字符编码：response.setContentType("text/html;charset=UTF-8")
+
+	4.数据传递过程中的乱码？
+		- 将数据从浏览器发送给服务器的时候，服务器接收到的数据是乱码。
+		- 不管是哪个国家的文字，在浏览器发送给服务器的时候，都会采用ISO-8859-1的编码方式发送，
+		  发送给web服务器之后，web服务器不知道这些数据之前是什么类型的文字，所以web服务器接收
+		  到的数据出现乱码。
+
+		- 解决数据传递过程中的乱码：
+			第一种方式：先将服务器中接收到的数据采用ISO-8859-1的方式解码，回归原始状态，
+			            再给定一种支持简体中文的编码方式重新编码组装【组装的时候，编码方式需要和浏览器的编码方式相同】。
+				    （既能解决post乱码，又能解决get乱码）
+			第二种方式：（该方法只能解决post请求的乱码问题，因为该方法针对的是请求体，而tomcat9貌似可以用该方法解决get乱码问题）
+			            调用request.setCharacterEncoding方法，例如：
+			            request.setCharacterEncoding("UTF-8");
+			第三种方式：（专门解决get请求乱码问题，因为该方式针对的是请求行）
+				     修改CATALINA_HOME/conf/server.xml文件。
+				     <Connector port="8080"
+				      protocol="HTTP/1.1"
+				      connectionTimeout="20000"
+				      redirectPort="8443"
+				      URIEncoding="UTF-8"/>
+
+				      Connector标签中都可以编写哪些属性？
+				           帮助文档：CATALINA_HOME\webapps\docs\config\http.html
+					   典型的属性：
+					         port -- 端口
+						 maxThreads -- 最高支持的线程并发执行数量，默认为200
+						 URIEncoding -- 设置请求行上的编码方式，解决get请求乱码
+
+19.Servlet线程安全问题：
+	1.Servlet是单实例多线程环境下运行的。
+
+	2.什么时候程序存在线程安全？
+		- 多线程并发
+		- 有共享数据
+		- 共享数据有修改操作
+
+	3.再JVM中，哪些数据可能存在线程安全问题？
+		- 局部变量内存空间不共享，一个线程一个栈，局部变量在栈中存储，局部变量不会存在线程安全问题。
+		- 常量无法被修改，所以常量不存在线程安全问题。
+		- 所有线程共享一个堆
+			* 堆内存中new出来的对象，在其中存储，对象内部有"实例变量"，所以实例变量的内存是共享的，
+			  实例变量多线程共同访问，并且涉及到修改操作的时候就会存在线程安全问题。
+		- 所有线程共享一个方法区
+			* 方法区中有静态变量，静态变量的内存也是共享的，若涉及到修改操作，静态变量也存在线程安全问题。
+
+	4.线程安全问题不止是体现在JVM中，还可能发送在数据库中，
+	  例如：多线程共享一张表，并且同时去修改表中的一些记录，那么这些记录就存在线程安全问题。
+	  怎么解决数据库表中的线程安全问题？
+		第一种方案：在java程序中使用sychronized关键字，线程排队执行，自然不会在数据库中并发。
+		第二种方案：行级锁/悲观锁
+		第三种方案：事务隔离级别：例如：串行化
+		第四种方案：乐观锁
+
+	5.怎么解决线程安全问题？
+		- 不使用实例变量，尽量使用局部变量。
+		- 若必须使用实例变量，我们可以考虑把对象变成多例对象，一个线程一个java对象，实例变量的内存也不会共享。
+		- 若必须使用单例，那只能使用sychronized线程同步机制，线程一旦排队，则吞吐量降低，降低用户体验。
+
+	6.怎么解决Servlet中线程安全问题？
+		- 不使用实例变量，尽量使用局部变量。
+		- Servlet必须是单例的，所以只能考虑使用sychronized线程同步机制。
+
+20.关于web系统中的资源跳转
+	1.跳转包括两种方式：
+		- 转发  forward
+		- 重定向  redirect
+
+	2.转发和重定向怎么完成？
+		- 转发：
+		     request.getRequestDispatcher("/b").forward(request,response);
+		- 重定向：
+		     response.sendRedirect(request.getContextPath()+"/b");
+
+	3.转发和重定向的相同点和不同点：
+		相同点：都可以完成资源跳转
+
+		不同点：
+		     * 转发是request对象触发的
+		     * 重定向是response对象触发的
+		     * 转发是一次请求，浏览器地址栏上地址不会变化
+		     * 重定向是两次请求，浏览器地址栏上地址会变化
+		     * 重定向的路径需要加webapp的根路径，所以可以完成跨webapp资源跳转
+		     * 转发是在本项目内部完成资源跳转
+
+	4.跳转的下一个资源可以是什么？
+		* 跳转的下一个资源可以是web服务器中任何一种资源：可以是Servlet，也可以是HTML，也可以是JSP......
+
+	5.什么时候采用转发？什么时候采用重定向？【大部分情况下都使用重定向】
+		- 若想完成跨webapp跳转，必须使用重定向。
+		- 若在上一个资源中向request范围中存储了数据，希望在下一个资源中从request范围中将其取出，必须使用转发。
+		- 重定向可以解决浏览器的刷新问题（每次刷新的都是最后一个被跳转的页面）
+
+	6.重定向原理是什么？
+		- response.sendRedirect("/jd/login");
+		程序执行到以上代码，将请求路径/jd/login反馈给浏览器，
+		浏览器自动又向web服务器发送了一次全新的请求：/jd/login,
+		浏览器地址栏上最终显示的地址是：/jd/login
+
+21.完成用户登陆（见myeclipse中的实例！）
+
+22.Cookie
+	1.Cookie作用是什么？
+		- Cookie可以保存会话状态，但是这个会话状态是保存在客户端上。
+		- 只要Cookie清除，或者Cookie失效，这个会话状态就没有了。
+		- Cookie是保存在浏览器客户端上的
+		- Cookie可以保存在浏览器缓存中，浏览器关闭Cookie消失
+		- Cookie也可以保存在客户端的硬盘文件上，浏览器关闭Cookie还在，除非Cookie失效
+		- Cookie保存在客户端硬盘文件上时，只对保存的那个浏览器客户端有效，对其他浏览器客户端无效
+		  例如：在谷歌浏览器保存了Cookie，下次使用谷歌浏览器的时候Cookie有效，
+		        而IE浏览器则没有保存Cookie，所以使用IE浏览器的时候Cookie无效。
+
+	2.Cookie只有在javaweb中有吗？
+		- Cookie不止是在javaweb中存在
+		- 只要是web开发，只要是B/S架构的系统，只要是基于HTTP协议，就有Cookie存在
+		- Cookie这种机制是HTTP协议规定的
+
+	3.Cookie实现的功能，常见的有哪些？
+		- 保存购物车商品的状态在客户端上
+		- 十天内免登陆
+		........
+
+	4.在java中Cookie被当作类来处理，使用new运算符可以创建Cookie对象，而且Cookie由两部分组成，
+	  分别是Cookie的name和value，name和value都是字符串类型。
+
+	5.在java程序中怎么创建Cookie
+		Cookie cookie=new Cookie(String name,String value);
+
+	6.服务器可以一次向浏览器发送多个Cookie，怎么发送Cookie？
+		response.addCookie(Cookie对象);
+		例如：response.addCookie(cookie1);
+
+	7.默认情况下，服务器发送Cookie给浏览器之后，浏览器默认将Cookie保存在缓存当中，只要不关闭浏览器，Cookie永远存在，并且有效。
+	  当浏览器关闭之后，缓存中的Cookie被清除。
+
+	8.在浏览器客户端无论是硬盘中还是缓存中保存的Cookie，什么时候会再次发送给服务器呢？
+		- 浏览器会不会提交发送这些Cookie给服务器，和请求路径有关系。
+		- 请求路径和Cookie是紧密关联的。
+		- 不同的请求路径会发送提交不同的Cookie
+
+	9.默认情况下Cookie会和哪些路径绑定在一起？
+	     例：
+		/webapp名/test/CreateCookie  请求服务器，服务器生成Cookie，并将Cookie发送给浏览器客户端
+		这个浏览器中的Cookie会默认和"test/"这个路径绑定在一起。
+		也就是说，以后只要发送"test/"请求，Cookie一定会提交给服务器。
+
+		/webapp名/a  请求服务器，服务器生成Cookie，并将Cookie发送给浏览器客户端
+	        这个浏览器中的Cookie会默认和"webapp名/"这个路径绑定在一起。
+		也就是说，以后只要发送"webapp名/"请求，Cookie一定会提交给服务器。
+
+	10.其实路径是可以指定的，可以通过java程序进行设置，保证Cookie和某个特定的路径绑定在一起。
+	   假设执行了这样的方法：cookie.setPath("/webapp名/king");
+	   那么：Cookie将和"/webapp名/king"路径绑定在一起
+	   只有发送"/webapp名/king"请求路径，浏览器才会提交Cookie给服务器。
+
+	11.默认情况下没有设置Cookie的有效时长，该Cookie被默认保存在浏览器的缓存当中，只要浏览器不关闭则Cookie存在，
+	   只要关闭浏览器Cookie就消失，我们可以通过设置Cookie的有效时长，以保证Cookie保存在硬盘文件当中，但是这个
+	   有效时长必须是>0的，换句话说，只要设置Cookie的有效时长大于0，则该Cookie会被保存在客户端硬盘文件当中。
+	   有效时长过去之后，则硬盘文件当中的Cookie失效。
+		Cookie有效时长 = 0   直接被删除
+		Cookie有效时长 < 0   不会被存储
+		Cookie有效时长 > 0   存储在硬盘文件当中
+		（有效时长以秒为单位）
+
+		方法：cookie对象.setMaxAge(有效时长);
+		       例：cookie1.setMaxAge(60*60);  //一小时有效
+
+	12.浏览器提交Cookie给服务器，服务器怎么接收Cookie？
+		Cookie[] cookies=request.getCookies();   //从request对象中接收所有提交的Cookie
+
+	13.如何获取Cookie对象的name和value
+		- 获取name：
+		       String cookieName=cookie.getName();
+		
+		- 获取value：
+		       String cookieValue=cookie.getValue();
+
+	14.浏览器是可以禁用Cookie的，什么意思？
+		- 表示服务器发送过来的Cookie，浏览器不接收。
+		- 但是服务器还是会发送Cookie，只不过浏览器不再接收。
+	
+23.使用Cookie机制实现十天内免登录（具体见实例）
+	Cookie保存会话状态【在浏览器客户端上】
+
+24.Session
+	1.Session表示会话，不止是在javaweb中存在，只要是web开发，都会有会话这种机制。
+
+	2.在java中会话对应的类型是：javax.servlet.http.HttpSession，简称session/会话。
+
+	3.Cookie可以将会话状态保存在客户端，HttpSession可以将会话状态保存在服务器端。
+
+	4.HttpSession对象是一个会话级别的对象，一次会话对应一个HttpSession对象。
+
+	5.什么是一次会话？
+		- 一般可以这样理解：用户打开浏览器，在浏览器上进行一些操作，直到最后关闭浏览器，表示一次完整的会话。
+		- 本质上描述：从session对象的创建到最终session对象超时之后被销毁，这才是真正意义上的一次完整会话。
+
+	6.在会话进行过程中，web服务器一直为当前这个用户维护着一个会话对象/HttpSession。
+
+	7.在web容器中，web容器维护了大量的HttpSession对象，换句话说，在web容器中应该有一个“Session列表”，
+	  思考：为什么当前会话中的每一次请求都可以获取到属于自己的会话对象？Session的实现原理？
+		- 打开浏览器，在浏览器上首次发送请求，
+		- 服务器会创建一个HttpSession对象，该对象代表一次会话，
+		- 同时生成HttpSession对象对应的Cookie对象，并且Cookie对象的name都是JSESSIONID，Cookie的value是32长度的字符串，
+		- 服务器将Cookie的value和HttpSession对象绑定到session列表中，
+		- 服务器将Cookie完整发送给浏览器客户端，
+		- 浏览器客户端将Cookie保存到缓存中，
+		- 只要浏览器不关闭，Cookie不会消失，
+		- 当再次发送请求的时候，会自动提交缓存当中的Cookie，
+		- 服务器接收到Cookie，验证Cookie的name确实是：JSESSIONID，然后获取该Cookie的value，
+		- 通过Cookie的value去session列表中检索对应的HttpSession对象，这就是Session的实现原理。
+
+	8.和HttpSession对象关联的这个Cookie的name是比较特殊的，在java中就叫做：jsessionid
+
+	9.浏览器禁用Cookie会出现什么问题？怎么解决？
+		- 浏览器禁用Cookie，则浏览器缓存中不再保存Cookie
+		- 导致在同一个会话中，无法获取到对应的会话对象
+		- 禁用Cookie之后，每一次获取的会话对象都是新的
+
+		浏览器禁用Cookie之后，若还想拿到对应的session对象，必须使用URL重写机制，怎么重写URL：
+			- 在地址栏的最后加一个分号，将与HttpSession对象关联的Cookie写进去
+			   例如：http://localhost/webapp/login;jsessionid=****....******
+
+			   重写URL会给编程带来难度/复杂度，所以一般的web站点是不建议禁用Cookie的。建议浏览器开启Cookie。
+
+	10.浏览器关闭之后，服务器端对应的session对象会被销毁吗？为什么？
+		- 浏览器关闭之后，服务器不会销毁session对象
+		- 因为B/S架构的系统基于HTTP协议，而HTTP协议是一种无连接/无状态的协议
+		- 什么是无连接/无状态？
+			* 请求的瞬间浏览器和服务器之间的通道是打开的，请求响应结束之后，通道关闭
+			* 这样做的目的是为了降低服务器的压力
+
+	11.session对象在什么时候被销毁？
+		- web系统中引入了session超时的概念
+		- 当很长一段时间（这个时间可以配置）没有用户再访问该session对象，此时session对象超时，web服务器自动回收session对象
+		- 如何配置时间？
+			在web.xml文件中，默认是30分钟
+			   <session-config>
+			       <session-timeout>120</session-timeout>   //这里配置为两个小时
+			   </session-config>
+
+	12.关于HttpSesion中的常用方法
+		- void setAttribute(String name,Object value)  //向session范围中添加数据
+		- Object getAttribute(String name)             //向session范围中获取数据
+		- void removeAttribute(String name)            //向session范围中删除数据
+
+		- void invalidate()   //销毁session对象
+
+	13.ServletContext,HttpSession,HttpServletRequest接口的对比：
+		- 以上都是范围对象：
+			* ServletContext application；是应用范围
+			* HttpSession session；是会话范围
+			* HttpServletRequest request；是请求范围
+
+		- 三个范围的排序：
+			application>session>request
+
+		- application完成跨会话共享数据，
+		  session完成跨请求共享数据（但是这些请求必须在同一个会话当中），
+		  request完成跨Servlet共享数据（但是这些Servlet必须在同一个请求当中[转发]）
+
+		- 使用原则：由小到大尝试，优先使用小范围。
+		       例如：登陆成功之后，已经登陆的状态需要保存起来，可以将登陆成功的状态保存在session对象中。
+		             登陆成功状态不能保存在request范围中，因为一次请求对应一个新的request对象。
+			     登陆成功状态也不能保存在application范围中，因为登陆成功状态是属于会话级别的，不能所有用户共享。
+
+25.会话对象记录登陆状态（具体看实例！）
+	实现以下功能：
+		- 登陆
+		- 登陆成功后将此“已登录”状态保存
+		- 实现“显示用户列表”功能
+		- 当用户点击“显示用户列表”的时候，验证用户是否已登陆，已登录则继续显示列表，没有登陆则跳转到登陆页面
+		- 退出系统功能（销毁session）
+
+
+
+
+
+		
+
+	
+
+
+

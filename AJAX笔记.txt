@@ -1,0 +1,224 @@
+1.什么是AJAX？
+     异步的JavaScript And Xml。
+     AJAX不是一个技术，是多个技术联合实现的产物。
+
+2.AJAX是浏览器客户端上的前端技术。
+   注意：只要是做web开发，B/S架构的，不管服务器端编程语言是哪一种，前端AJAX都是要学习的。
+   
+3.异步和同步有什么区别？
+    异步：A线程和B线程并发执行，谁也不等谁。
+    同步：A线程执行的时候，B线程需要等待，或者B线程执行的时候，A线程需要等待。
+
+4.传统的请求和ajax请求有什么区别？
+    传统的请求都是同步的，AJAX请求可以做到异步。
+
+5.AJAX经典的案例：
+     Google的auto complete（输入框自动补全）
+     Google的map（谷歌地图）
+
+6.浏览器本身这个软件也是支持多线程并发的，其中ajax请求就是一个线程
+  ，一个页面上可以同时发送多个ajax请求。 多个ajax请求对应浏览器多个线程，
+
+  当整个浏览器采用的是传统请求的时候，请求只要一发送，整个浏览器窗口锁定，
+  无法点击其他按钮，并且浏览器会将窗口当中的数据全部清除，迎接新的页面。
+
+7.AJAX主要解决的问题：
+     页面的局部刷新问题，
+     使用AJAX可以在同一个网页当中并发的发送多个请求，请求与请求之间互不等待，互不干扰。
+     这样可以提高用户的体验。
+
+8.传统请求
+	传统请求：
+		在用户点击浏览器上的某个超链接的时候，发送了传统的请求，
+		这次请求的发送，浏览器会将当前网页的内容全部清除，迎接
+		一个新的页面。	
+		
+
+9.ajax发送（参见实例：get请求）
+	发送ajax请求的代码包括四步，这四步是固定的。
+	ajax发送请求全靠浏览器内置的这个对象：XMLHttpRequest对象。
+	也就是说使用XMLHttpRequest对象可以在浏览器当中单独启动一个新的浏览器线程，通过浏览器线程发送请求，达到异步效果。
+
+	1.XMLHttpRequest对象在请求响应的过程当中，该对象的readyState状态从0~4:
+		0：请求未初始化
+		1：服务器连接已建立
+		2：请求已接收
+		3：请求处理中
+		4：请求已完成，且响应已就绪
+
+	2.发送ajax请求的四步：
+		- 创建AJAX核心对象
+		- 注册回调函数
+		- 开启通道
+		- 发送请求
+		例：以下为get请求
+			//1.创建ajax核心对象XMLHttpRequest（浏览器内置的，可以直接使用）
+			var xhr;
+			if(window.XMLHttpRequest){
+				//如果浏览器支持这个对象（低版本IE不支持）
+				xhr=new XMLHttpRequest();
+			}else{
+				//不支持该对象
+				xhr=new ActiveXObject("Microsoft.XMLHTTP");
+			}
+			
+			//2.注册回调函数
+			  //程序执行到这里的时候，后面的回调函数并不会执行，只是将回调函数注册给xhr对象
+			  //等xhr对象的readyState发生改变的时候，后面的回调函数会执行
+			xhr.onreadystatechange=function(){
+				
+			}
+			
+			//3.开启浏览器和服务器之间的通道
+			  /*
+				method：指定请求方式为get还是post
+				url：请求路径
+				async：true/false(true表示支持异步，false表示在同一个浏览器窗口中，某个时间段只能发送一个ajax请求，不能多个ajax请求并发执行)
+			  */
+			xhr.open(method,url,async);
+			
+			//4.发送ajax请求
+			xhr.send();
+
+		例：以下为post请求
+			//1.创建ajax核心对象XMLHttpRequest（浏览器内置的，可以直接使用）
+			var xhr;
+			if(window.XMLHttpRequest){
+				xhr=new XMLHttpRequest();
+			}else{
+				xhr=new ActiveXObject("Microsoft.XMLHTTP");
+			}
+			
+			//2.注册回调函数
+			xhr.onreadystatechange=function(){
+				if(xhr.readyState==4){
+					if(xhr.status==200){
+						var name=document.getElementById("name");
+						name.innerHTML=xhr.responseText;
+					}else{
+						alert(xhr.status);
+					}
+				}
+			}
+			
+			//3.开启浏览器和服务器之间的通道
+			xhr.open("POST","checkusername.do,true);//这里只开启通道，不发送请求
+			//发送post请求必须使用表单form进行提交
+			//使用post请求以下代码行必须有
+			//注意：ajax中post请求的乱码需要在这里处理，字符集需要和浏览器的字符集相同，需要和服务器中的字符集相同
+			xhr.setRequestHeader("Content-Type","application/x-www-form-urlencoded;charset=utf-8");//模拟表单提交数据
+			
+			//4.发送ajax请求
+			xhr.send("username="+username);//post请求提交数据在send方法中提交
+
+		post请求和get请求只有第三步和第四步有区别，其他地方一样。
+
+10.AJAX主要解决的问题：
+	页面的局部刷新问题。
+	使用ajax可以在同一个网页当中并发的发送多个请求。请求与请求之间互不等待，互不干扰。
+	这样可以提高用户的体验。
+
+11.ajax异步请求用户的体验在浏览器上不存在间断期，用户体验不间断。
+   但是传统的请求，由于整个页面被全部清除，有一个空白期，用户的体验是间断的。
+   （现代开发中，多数请求都是ajax，但传统请求也会存在，并行的。）
+
+12.get请求缓存问题
+	为了防止ajax get走浏览器缓存，建议在请求路径中添加时间戳。
+	例如：var timeStamp=new Date().getTime();
+	      xhr.open("GET","/get请求/checkusername.do?time="+timeStamp+"&username="+username,true);
+
+13.省市联动实例
+	0.准备数据库表
+
+	1.ajax请求显示省份
+		- 在页面加载完毕之后，发送ajax请求获取所有省份，后台拼接一个json格式的字符串，发送给前端，
+	          前端解析json拼接html字符串，将html字符串设置到下拉列表中。
+
+	2.json：
+		[
+			{"code":110,"name":"山东省"},
+			{"code":110,"name":"山东省"},
+			{"code":110,"name":"山东省"},
+			{"code":110,"name":"山东省"}
+		]
+
+	3.前端接收到以上的json字符串之后，eval生成json对象，前端再使用循环语句取出每一个json对象，
+	  每一个json对象都是一个省份
+
+（以下为重点）
+
+14.jQuery对ajax开发步骤的封装版
+	体现思路：不需要开发人员亲自实现ajax的四个步骤，只需要开发人员提供ajax开发步骤需要的参数。
+		  这样可以让开发人员专注【局部刷新函数的实现】
+
+15.$.ajax()：
+	是jQuery为ajax开发提供的标准简化版。
+	使用：
+		1.ajax()只接收一个json对象来作为参数。
+		  开发人员可以将ajax实现需要的参数在json对象中进行声明
+
+		2.var option={
+				type:
+					[作用]：通知异步请求对象采用何种方式发送请求协议包(post/get)
+					[赋值]：type:'get'，type:'post'
+					[注意]：type属性可以不声明，此时默认使用get请求
+
+				url:
+					[作用]：本次要访问资源文件的地址，要求异步请求对象将这个地址写入到请求协议包中的请求行上
+					[赋值]：url:'/myweb/one.do'，'/myweb/emp/check.do'
+					[注意]：url属性不能省略，url属性不能携带请求参数
+
+				data：
+					[作用]：通知异步请求对象本次要携带的请求参数
+					[赋值]：data属性可以接收【以字符串形式拼接的参数】
+						data:"uname=mike&password=123"，
+
+						data属性还可以接收【json格式描述的参数】
+						data:{"uname":"mike","password":"123"}
+					[注意]：如果没有需要携带发送的参数，可以不声明data
+
+				async:
+					[作用]：设置同步请求与异步请求
+					[赋值]：async:true	//异步请求
+						async:false     //同步请求
+					[注意]：绝大多数的情况下，都是使用异步请求，此时async属性可以不用声明，默认为true
+
+				success:
+					[作用]：指定异步请求对象工作完毕后需要调用的【局部刷新函数名】
+					[赋值]：success:callBack
+					[注意]：只能写局部刷新函数的名字，不要带括号，
+						success不能省略
+
+				error:
+					[作用]：通知异步请求对象在接收【404，405，500】等状态码时，需要调用的方法名
+					[赋值]：error:errorFun
+					[注意]：开发测试时会写，上线不需要写。
+
+				dataType:
+					[作用]：通知jQuery，将异步对象中读取的数据转化为何种数据类型
+					[赋值]：dataType:'text'  //将异步对象中读取的数据转变为字符串
+						dataType:'json'  //将异步对象中独缺的数据通过eval函数转变为json对象
+					[注意]：可以不声明，默认将读取的数据转变为字符串输入到局部刷新函数中	
+			     }
+
+16.$.get()与$.post()
+	1.介绍：
+		$.get()：通知异步请求对象采用get方式发送请求
+		$.post()：通知异步请求对象采用post方式发送请求
+		两者都是默认发送异步请求
+
+	2.$.get()的使用
+		url--------请求地址
+		data-------请求参数
+		callBack---局部刷新函数名
+		dataType---需要得到的数据类型[text/json]
+		
+		语法：
+			$.get(url,data,callBack,dataType);
+
+		如果只需要字符串类型的数据：$.get(url,data,callBack);
+
+		如果只需要字符串类型的数据，同时没有携带请求参数：$.get(url,callBack);
+
+	3.$.post()的使用
+		和上面$.get()的用法一毛一样。

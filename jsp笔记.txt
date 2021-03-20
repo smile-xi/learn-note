@@ -1,0 +1,252 @@
+1.jsp是什么？
+	- JavaServer Pages
+	- 基于java语言实现的服务器端页面
+	- JSP是javaEE规范之一
+
+2.jsp文件通常存放在什么位置？
+	- jsp可以放在WEB-INF目录外，目前我们是这么做的
+	- 在实际开发中，有很多项目是将jsp放到WEB—INF目录中，保护JSP
+	- WEB-INF目录中的数据是相对安全的
+
+3.jsp文件后缀是什么？
+	- 默认是.jsp
+	- 但是jsp文件的后缀是可以修改的，通过修改CATALINA_HOMW/conf/web.xml文件
+
+4.JS和JSP的区别
+	- JS：JavaScript，运行在浏览器中，和服务器没有关系。
+	- JSP：JavaServer Pages，运行在服务器中，JSP底层就是java程序，运行在JVM中。
+
+5.JSP的执行原理？
+	- 浏览器上访问的路径虽然是以.jsp结尾，访问的是某个jsp文件，其实底层执行的是.jsp文件对应的java程序
+	- Tomcat服务器负责将.jsp文件翻译生成.java源文件，并且将.java源文件编译生成.class字节码文件
+	- 访问jsp，其实底层还是执行了.class文件中的程序
+	- Tomcat服务器内置了一个JSP翻译引擎，专门负责翻译JSP文件，编译java源文件
+	- index.jsp会被翻译生成index_jsp.java，编译生成index_jsp.class
+	- index_jsp这个类继承了HttpJspBase，而HttpJspBase继承了HttpServlet
+	- jsp就是Servlet，只不过职责不同，jsp的强项是做页面展示。
+
+6.在jsp文件中编写的所有HTML、CSS、JavaScript，对于jsp来说，只是普通的字符串。
+  都被翻译到：out.write("翻译到这里");
+
+7.jsp文件修改之后，不需要重新部署，也不需要重新启动Tomcat服务器。
+
+8.jsp文件第一次访问的时候为什么非常慢？
+	- 需要启动JSP翻译引擎
+	- 需要一个翻译的过程
+	- 需要一个编译的过程
+	- 需要Servlet对象的创建过程
+	- init方法调用
+	- service方法调用
+	......
+
+9.为什么第2+次访问JSP的时候非常快？
+	- 不需要重新翻译
+	- 不需要重新编译
+	- 不需要创建Servlet对象
+	- 直接调用Servlet对象的service方法
+
+	jsp也是一个单实例多线程环境下运行的Servlet对象
+
+10.jsp文件在什么时候会被重新翻译？
+	- jsp文件被修改之后会被重新翻译
+	- 怎么确定jsp文件修改了呢？
+	     Tomcat服务器会记录jsp文件的最后修改时间。
+
+11.jsp的专业注释方法：<%----%>   //使用这种注释方法，不会被翻译到java源文件中
+
+12.关于JSP的小脚本scriptlet：
+	<%
+	     java语句;
+	     java语句;
+	     java语句;
+	     java语句;
+	     java语句;
+	%>
+
+	小脚本中的java语句被翻译到Servlet的service方法中，所以小脚本中必须编写“java语句”，java语句以分号结尾。
+
+	注意：小脚本中不能编写实例变量、不能编写方法、不能编写静态语句块......
+	      因为在service方法中不能写这些，凡是service方法中不能写的，小脚本通通都不能写。
+
+13.所谓JSP规范，就是SUN制定好的一些翻译规则，按照翻译规则进行翻译，生成对应的java源程序。
+   不同的web服务器，翻译的结果是完全相同的，因为这些服务器在翻译的时候都遵守的JSP翻译规范。
+    
+14.JSP的声明语法格式：
+	<%!
+	    实例变量;
+	    静态变量;
+	    方法;
+	    静态语句块;
+	    构造函数;
+	    ......
+	%>
+
+	注意：声明块中的java程序会被JSP翻译引擎翻译到service方法之外，
+	      声明块中不能直接编写java语句，除非是变量的声明。
+
+15.关于jsp的九大内置对象
+	1.什么是内置对象？
+		可以直接在jsp文件中拿来使用的引用。
+
+	2.九大内置对象有哪些？
+	    内置对象名称	    完整类名
+	    -------------------------------------------------------------
+	    pageContext		    javax.servlet.jsp.PageContext               页面范围【页面上下文】
+	    request		    javax.servlet.http.HttpServletRequest       请求范围
+	    session		    javax.servlet.http.HttpSession              会话范围
+	    application		    javax.servlet.ServletContext                应用范围
+
+	    out			    javax.servlet.jsp.JspWriter                 标准输出流
+	    response		    javax.servlet.http.HttpServletResponse      响应对象
+
+	    config		    javax.servlet.ServletConfig                 Servlet配置信息对象
+
+	    exception		    javax.lang.Throwable                        异常引用（isErrorPage="true"）
+
+	    page		    javax.lang.Object [page=this]               （很少用）
+	
+	3.以上内置对象只能在service方法中“直接”使用，在其他方法中无法“直接”使用，可以“间接”使用。
+
+	4.主要研究JSP中四个作用域对象/范围对象：
+		pageContext < request < session < application
+
+		pageContext：在同一个JSP页面中共享数据，不能跨JSP页面。
+                request：在同一个请求中共享数据
+		session：在同一个会话中共享数据
+		application：所有用户共享的数据可以放到应用范围中
+
+	5.关于pageContext
+		pageContext只能在同一个JSP页面中共享数据，范围是最小的。
+		通过pageContext这个页面上下文对象，可以获取当前页面中的其他对象。
+		例如：pageContext.getRequest()
+		      pageContext.getSession()
+		      pageContext.getServletContext()
+		      pageContext.getServletConfig()
+
+
+16.表达式：<%= %>
+	<%= %>等同于<% out.print(); %>
+
+17.关于jsp指令
+	1.指令的作用：指导JSP的翻译引擎如何翻译JSP代码。
+
+	2.JSP中共三个指令：
+		- page		页面指令
+		- include       包含指令
+		- taglib        标签库指令
+
+	3.指令的使用语法格式：
+		<%@指令名 属性名=属性值 属性名=属性值......%>
+
+	4.关于JSP的page指令，page指令中常用的属性：
+		- contentType      设置JSP的响应内容类型，同时在响应的内容类型后面也可以指定响应的字符编码方式
+		- pageEncoding     设置JSP响应时的字符编码方式
+		
+		- import           组织导入
+
+		- session          设置当前JSP页面中是否可以直接使用session内置对象
+		
+		- errorPage        若当前页面发生错误，则跳转到指定页面
+		- isErrorPage      是否是错误页面
+		
+		- isELIgnored      是否忽略EL表达式
+
+	5.关于page指令中的session属性：
+		- session="true"
+			* 表示在当前jsp中可以直接使用内置对象session
+			* 程序执行的时候获取当前的session会话对象，若获取不到则新建session对象
+
+		- session="false"
+			* 表示在当前jsp中不能直接使用内置对象session
+			* 但是有一些业务可能要求在当前jsp页面中获取当前的session对象，没有获取到则不新建session对象，此时需要编写以下程序
+			  <%@page contentType="text/html;charset=utf-8" session="false"%>
+			  <%
+			       HttpSession session=request.getSession(false);
+			  %>
+
+		- 若session这个属性没有指定，默认值就是session="true"
+
+	6.关于page指令中的errorPage属性：
+		当前jsp页面出错之后，要跳转的页面路径，需要使用该属性指定。
+		例如：<%@page errorPage="/inde2.jsp"%>
+
+	7.关于page指令中的isErrorPage属性：
+		- isErrorPage="false" 表示内置对象exception无法使用【缺省情况下也是false】
+		- isErrorPage="true" 表示内置对象exception可以使用
+
+	8.关于include指令：
+		1.a.jsp可以将b.jsp包含进来，当然被包含的资源不一定是jsp，也可能是其他的网络资源
+
+		2.include作用：
+			在网页中有一些主体框架，例如：网页头、网页脚，这些都是固定不变的，
+			我们可以将网页头、网页脚等固定不变的单独编写到某个jsp文件中，
+			在需要页面使用include指令包含进来。
+			优点：
+				代码量少了
+				便于维护【修改一个文件就可以作用于所有的页面】
+
+		3.在一个jsp中可以使用多个include指令
+
+		4.include实现原理：
+			- 编译期包含
+			- a.jsp包含b.jsp，底层共生成一个java源文件，一个class字节码文件。三种读法：编译期包含/翻译期包含/静态联编
+
+		5.静态联编的时候，多个jsp可以共享同一个局部变量，
+		  因为最终翻译之后的service方法只有一个。
+
+18.关于jsp中的动作
+	语法格式：<jsp:动作名 属性名=属性值......></jsp:动作名>
+	1.关于JSP中的include动作：
+		- a.jsp包含b.jsp，底层分别生成两个java源文件，两个class字节码文件
+		- 编译阶段并没有包含，编译阶段是两个独立的class字节码文件，生成两个Servlet，两个独立的service方法
+		- 使用include动作属于运行阶段包含，实际上实在运行阶段a中的service方法调用了b中的service方法，达到了包含效果
+		- a.jsp包含b.jsp，若两个jsp文件中有重名的变量，只能使用动态包含，其余可以使用静态包含。
+		- include动作完成的动态包含，被称为动态联编。
+
+	2.关于jsp中的bean动作：
+		- <jsp:useBean id=""></jsp:useBean>
+		- <jsp:setProperty property="" name=""/>
+		- <jsp:getProperty property="" name=""/>
+		以上bean动作使用较少，作为了解。
+
+	3.关于jsp中的forward动作：
+		- forward表示属于转发的动作，jsp中没有重定向的动作
+		语法：
+		    <jsp:forward page="跳转地址"></jsp:forward>
+		    例如:<jsp:forward page="/index.jsp"></jsp:forward>
+
+19.完成客户信息管理(实例)
+	- 客户信息列表展示
+	- 客户信息详情
+	- 客户信息删除
+	- 客户信息修改
+	- 客户信息添加
+
+	在crm项目中完成
+	crm：
+		- 完成表的创建
+		- 拷贝驱动
+
+		- 定义JDBC工具类，方便JDBC编程
+	
+		- 设计“保存客户”页面
+		- 完成保存功能
+
+		- 完成“显示客户信息列表”
+
+		- 完成删除客户信息
+		
+
+
+
+		
+
+
+
+
+
+
+
+
+
+

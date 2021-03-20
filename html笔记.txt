@@ -1,0 +1,281 @@
+1.什么是html
+    HTLM：Hyper Text Markup Language (超文本标记语言)
+                  由大量标签组成。
+
+2.html的注释：
+           <!--这是html的注释-->
+
+3.HTML5:
+      如果代码第一行加上 <!doctype html> 就表示HTML5的语法，去掉就表示HTML4.0。
+
+4.HTML不区分大小写，语法松散不严格。
+
+5.段落标签
+          语法：<p>文本</p>
+
+6.标题字    等级为<h1>到<h6>
+         语法：<h1>标题</h1>      //<h1>标题最大
+                   <h2>标题</h2>
+                   <h3>标题</h3>
+                   <h4>标题</h4>
+                   <h5>标题</h5>
+                   <h6>标题</h6>       //<h6>标题最小
+
+7.换行标签
+          语法：文本<br>
+                
+8.水平线
+          语法：<hr  属性>       //例如：<hr color="red" width="50%">将水平线设置为红色，宽度占整个界面的百分之50。
+                                             //属性可以选择不加
+                                        
+9.预留格式
+          在预留格式标签内的文本，编写时属于什么格式，在浏览器中展示时就是什么格式。
+            语法：    <pre>
+                             文本
+                      </pre>
+
+10.删除字/插入字/粗体字/斜体字
+          语法：
+                    <del>删除字</del>
+                    <ins>插入字</ins>
+                    <b>粗体字</b>
+                    <i>斜体字</i>
+
+11.右上角加字/右下角加字
+       语法：
+            10<sup>2</sup> //表现形式为：10²（2出现在10的右上角）
+            10<sub>m</sub> //表现形式为：m出现在10的右下角
+
+12.字体标签
+        语法：<font 属性>文本</font>  //例如：<font color="blue" size="30">字体标签</font>
+
+13.实体符号
+     当你所想要展示的符号在html语法中有特殊意义时，无法直接展示，需要用实体符号来展示。
+     实体符号的特点是：以&开始，以;结束
+     小于号(<)：&lt;
+     大于号(>)：&gt;
+     空格：&nbsp;
+     ........
+
+14.表格
+      语法：
+           <table border="1px" width="60%" height="150px">   <!--<table>标签中可以加属性,这里设置边框为1像素,宽度占界面的百分之60,高度为150像素-->
+	      <tr align="center">   <!--<tr>标签中添加属性，这里设置对齐方式为居中-->
+	         <th>a</th>
+		 <th>b</th>
+		 <th>c</th>
+	      </tr>
+	       <tr>
+	         <td>d</td>
+		 <td>e</td>
+		 <td>f</td>
+	      </tr>
+	       <tr>
+	         <td>g</td>
+		 <td align="center">h</td>   <!--<td>标签中添加属性，这里设置对齐方式为居中-->
+		 <td>i</td>
+	      </tr>
+	   </table>
+        //<table>标签代表整个表格，<tr>标签代表表格中的行，<td>标签代表行中的列，
+	  <th>标签也是单元格标签，比<td>多的是里面的文本会自动居中和加粗，一般加到表格第一行，
+	  以上展示了一个三行三列的表格。
+
+15.表格单元格合并
+       语法：
+             合并前：
+             <table border="1px" width="50%">
+	           <tr>
+		        <td>1</td>
+		        <td>2</td>
+		   	<td>3</td>
+	          </tr>
+	           <tr>
+		        <td>4</td>
+			<td>5</td>
+			<td>6</td>
+	          </tr>
+		   <tr>
+		        <td>7</td>
+			<td>8</td>
+			<td>9</td>
+		  </tr>
+	     </table>
+	      现在将6和9合并：
+	       <table border="1px" width="50%">
+	           <tr>
+		        <td>1</td>
+		        <td>2</td>
+		   	<td>3</td>
+	          </tr>
+	           <tr>
+		        <td>4</td>
+			<td>5</td>
+			<td rowspan="2">69</td>
+	          </tr>
+		   <tr>
+		        <td>7</td>
+			<td>8</td>
+		  </tr>
+	     </table>
+	      现在再将7和8合并：
+	       <table border="1px" width="50%">
+	           <tr>
+		        <td>1</td>
+		        <td>2</td>
+		   	<td>3</td>
+	          </tr>
+	           <tr>
+		        <td>4</td>
+			<td>5</td>
+			<td rowspan="2">69</td>
+	          </tr>
+		   <tr>
+		        <td colspan="2">78</td>
+		  </tr>
+	     </table>
+       注意事项：行合并(rowspan)的时候，删除单元格删下面那格。
+                 列合并(colspan)的时候，对删除哪一个单元格没有要求。
+
+16.<meta charset="utf-8">
+    这句话的意思是告诉浏览器用uft-8的字符集打开当前页面，并不是设置当前页面的字符编码方式。
+
+17.设置背景颜色和背景图片
+    语法：
+       将想要设置的背景颜色和背景图片加在<body>标签中
+       设置背景颜色：bgcolor
+       设置背景图片：background
+        例如：<body bgcolor="red" background="背景图片.png"></body>
+
+18.设置图片
+     语法：
+       <img src="图片位置.后缀" 属性/>
+        //属性可以设置宽度等等（最好不要设置高度），也可以不设置。
+	   例如：<img src="img/bd_logo1.png" width="100px" title="我是百度图片哟" alt="图片找不到"/>
+	   //只需设置width，高度会等比例自动更改，title设置的是鼠标悬停在图片上时显示的文字,alt设置的是图片加载失败时显示的文字。
+
+19.超链接
+      语法：
+         <a href="网址">显示的文字</a>
+	 例如：<a href="http://www.baidu.com">百度</a>
+
+     图片超链接：<a href="网址">
+                      <img src="图片位置"/>
+                 </a>
+                 在<a></a>标签中插入图片就为图片超链接。
+
+      超链接的target属性
+           语法：<a href="网址" target="属性值"></a>
+	       属性值有：
+	                 _blank  ：点击超链接后打开一个新窗口          
+	                 _self   ：当前窗口（如果不设置则默认为这种方式）
+			 _top    ：顶级窗口
+			 _parent ：父窗口
+
+20.列表
+     无序列表：
+         语法：
+	      <ul>          //ul标签中可以加属性来改变列表样式，例如：<ul type="属性">
+	         <li>a</li>
+		 <li>b</li>
+		 <li>c</li>
+	      </ul>
+	//注意：列表中可以再嵌套列表，例如：<ul>
+	                                       <li>a
+					          <ul>
+						     <li>a1</li>
+						  </ul>
+					       </li>
+				            </ul>
+
+      
+      有序列表：
+          语法：
+	       <ol>
+	          <li>水果</li>
+		  <li>零食</li>
+		  <li>蔬菜</li>
+	       </ol>
+	       //有序列表同样可以嵌套列表，方法和无序一样
+
+21.表单（form）
+     1.表单有什么用？
+         收集用户信息，表单展现之后，用户填写表单，点击提交按钮提交数据给服务器。
+     
+     2.怎么画表单？
+         使用form标签。
+     
+     3.一个网页当中可以有多个form。
+     
+     4.action属性：表单最终是需要提交数据给服务器的，from标签有一个action属性，这个属性用来指定服务器地址。
+       action属性和超链接中的href属性一样，都可以向服务器发送请求（request）,但表单同时还可以带数据过去。
+
+     5.提交按钮：<input type="submit" value="值"/>  //对于按钮来说，value用来设置按钮上显示的文本
+
+     6.文本框：<input type="text" name="键名"/>    //没有name属性就不会提交数据
+
+     7.密码框：<input type="password" name="键名"/>   //没有name属性就不会提交数据
+
+     8.单选框：<input type="radio" name="键名" value="值" checked/>  //单选框需要设置多个并且name相同才能实现单选功能，若需要设置默认选项则加上checked
+
+     9.复选框：<input type="checkbox" name="键名" value="值" checked/>   //复选框需要设置多个并且name相同才能实现多选功能，若需要设置默认选项则加上checked
+
+     10.下拉列表： <select name="键名" multiple="multiple" size="1">   //如果加上multiple属性则表示下拉列表支持多选,不加则为单选,size表示下拉列表显示的条目数量
+			<option value="值">a</option>
+	  	        <option value="值">b</option>
+			<option value="值" selected>c</option>    //若需要设置默认选项则加上selected
+			<option value="值">d</option>
+		 </select>
+     
+     11.文本域：<textarea rows="行数" cols="列数" name="键名"></textarea>   //文本域没有value属性，用户填写的就是value
+
+     12.file控件：<input type="file"/>     //文件上传专用，可选择想要提交的文件。
+
+     13.隐藏域控件：<input type="hidden" name="键名" value="值"/>   //网页上看不见，但是表单提交的时候会自动提交给服务器。
+
+     14.重置表单按钮：<input type="reset" value="值"/>   //可以将输入到表单上的信息全部清空，value用来设置按钮上显示的文本。
+
+     15.maxlength属性：可以设置文本框中可输入的字符数量。例如：<input type="text" maxlength="3"/> //最多可输入三个字符
+
+     16.name属性：表单项写了name属性的，一律会提交给服务器，不想提交这一项，就不要写name属性。
+
+     
+     17.readonly和disabled属性：都是加在<input/>标签中，例如：<input type="text" name="键名" value="值" readonly/>
+                    相同点：都是只读，不能修改。
+		    不同点：readonly修饰的值可以被用户选中，而disabled修饰的值无法被选中。
+		            readonly修饰的值可以提交给服务器，而disabled修饰的值无法提交(即使有name属性也无法提交)。
+
+     18.method属性：method属性只包含get和post，两种都会将数据提交，但是get会将提交的数据显示在地址栏上，
+                   而post不会将提交的数据显示在地址栏上，如果不主动设置method属性会默认使用get。
+
+22.HTML中元素的id属性：
+         在HTML文档中，任何一个元素(节点)都有id属性，id属性是该节点的唯一标识，所以在同一个HTML文档中id值不能重复。
+	 例如：
+	      <form id="myform">
+	           <input type="text" id="uesrname" name="username"/>
+		   <input type="password" id="password" name="password">   //id和name可以相同
+	      </form>
+	 注意：表单提交数据时和name有关，和id无关。
+
+	 id属性的作用：让我们更方便的获取这个节点。JavaSCript可以对HTML文档中的任意节点进行增删改，通常需要用id属性来获取节点对象。
+
+23.div和span
+     1.div和span是什么？有什么用？
+	 #div和span都可以称为"图层"。
+	 #图层的作用是为了保证页面可以灵活的布局。
+	 #图层就是一个一个的盒子，div嵌套div就是盒子套盒子。
+	 #div和span是可以定位的，只要定下div左上角的x轴和y轴坐标即可。
+     
+     2.其实最早的网页是采用table进行布局的，但是table不灵活，太死板。
+       现在的网页开发中div布局使用最多，几乎很少使用table进行布局了。
+
+     3.div和span的区别：
+          div独自占用一行（默认情况下）
+	  span不会独自占用一行。
+ 
+     语法：
+        <div id="div1">我是一个div</div>   //默认情况下div会独占一行
+
+	<span id="span1">我是一个span</span>
+
+   
+	

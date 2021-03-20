@@ -1,0 +1,1041 @@
+SpringBoot项目案例（实例）：
+	1.如何创建一个springboot框架web项目
+	2.使用springboot框架继承springmvc
+	3.使用springboot框架的核心配置文件application.properties
+	4.使用springboot框架的核心配置文件application.yml或者application.yaml
+	5.如果springboot框架的核心配置文件application.properties和application.yml或者application.yaml同时存在会出现什么情况？
+		application.properties配置文件的优先级最高，
+		如果同时存在，只有application.properties会生效，其他的以yml或yaml结尾的核心配置文件失效。
+
+	6.多环境下的核心配置文件的使用。（properties）
+		工作中开发的环境有哪些：开发环境、测试环境、准生产环境、生产环境。
+
+	7.多环境下的核心配置文件的使用。（yml或yaml）
+	8.springboot核心配置文件application.properties中的自定义配置。一个一个获取@Value
+
+	9.springboot在核心配置文件将自定义配置映射到一个对象
+
+	10.springboot集成jsp
+
+	11.springboot集成mybatis（mapper映射文件和dao接口放同一目录）
+	12.springboot集成mybatis（mapper映射文件放resources目录）
+
+	13.springboot项目下使用事务
+	14.springboot使用RESTful
+
+	15.springboot集成dubbo分布式框架
+		1.接口工程：存放实体bean和业务接口
+		2.服务提供者：实现业务接口，并将服务暴露到注册中心，调用数据持久层。
+			- 添加依赖（dubbo、注册中心、接口工程）
+			- 配置服务提供者核心配置文件
+		3.服务消费者：处理浏览器客户端发送的请求，从注册中心调用服务提供者所提供的服务。
+			- 添加依赖（dubbo、注册中心、接口工程）
+			- 配置服务消费者核心配置文件
+
+	16.springboot集成dubbo、mybatis、spring、springmvc、jsp
+		- 接口工程：存放实体bean和业务接口
+		- 服务提供者：集成mybatis、dubbo
+			- 添加依赖（mybatis、dubbo、zookeeper注册中心、接口工程、mysql驱动）
+			- 配置springboot核心配置文件（连接数据库、dubbo）
+		- 服务消费者：集成jsp、dubbo
+			- 添加依赖（dubbo、zookeeper注册中心、解析jsp页面的依赖、接口工程）
+			- 配置springboot核心配置文件（视图解析器、dubbo）
+
+	17.springboot创建非web工程-1：直接获取ConfigurableApplicationContext（了解）
+	18.springboot创建非web工程-2：实现CommandLineRuner，重写run方法（了解）
+
+	19.springboot使用拦截器
+		1.定义一个拦截器，实现HandlerInterceptor接口
+		2.创建一个配置类（相当于：在springmvc配置文件中使用<mvc:interceptors>声明拦截器）
+
+	20.springboot框架下使用servlet，第一种方式：注解方式（@WebServlet、@ServletComponentScan）
+	21.springboot框架下使用servlet，第二种方式：通过配置类注册组件的方式
+
+	22.springboot框架下使用过滤器Filter，第一种方式：注解方式（@WebFilter、@ServletComponentScan）
+	23.springboot框架下使用过滤器Filter，第二种方式：通过配置类注册组件的方式
+
+	24.springboot框架下设置字符编码，第一种方式：通过配置类注册一个字符编码过滤器
+	25.springboot框架下设置字符编码，第二种方式：直接在springboot的核心配置文件中设置请求响应的字符编码（强力推荐）
+
+	26.springboot工程打war包：在springboot核心配置文件中设置的端口号和上下文根会失效。
+	27.springboot工程打jar包：在springboot核心配置文件中设置的端口号和上下文根仍然生效。
+
+	28.springboot使用logback日志：logback日志是用来打印执行的sql语句和错误信息以及执行情况的。
+
+	29.springboot框架下使用Thymeleaf-1：初识thymeleaf
+	30.springboot框架下使用Thymeleaf-2：thymeleaf关闭页面缓存
+	31.Thymeleaf表达式
+	32.Thymeleaf的重要属性：循环遍历   th:each
+	33.Thymeleaf的重要属性：条件判断   th:if
+	34.Thymeleaf的重要属性：判断操作   th:switch 和 th:case
+	35.Thymeleaf的重要属性：内敛表达式  th:inline
+	36.Thymeleaf的基本表达式对象：#request、#session
+	37.Thymeleaf的功能表达式对象（太多了，了解就行）
+
+	38.汇总综合案例，会用到：多模块管理、ssm、mysql、dubbo、zookeeper、thymeleaf、springboot
+		
+			
+			
+		
+
+
+笔记内容：
+1.springboot是什么？
+	springboot是用来简化spring应用程序的创建和开发过程的，也就是说SpringBoot能简化我们之前采用
+	SpringMVC+Spring+MyBatis 框架进行开发的过程。
+
+	SpringBoot对开发过程进行了革命性的颠覆，完全抛弃了繁琐的xml配置过程，采用大量的默认配置简化我们的开发过程。
+
+2.SpringBoot的四大核心
+	1.自动配置
+	2.起步依赖
+	3.Actuator
+	4.命令行界面
+
+3.springboot项目写代码时注意事项
+	1.springboot项目代码必须放的Application类所在的同级目录或下级目录。
+
+4.springboot核心配置文件
+	一个springboot工程可以有多个核心配置文件，但只有一个核心配置文件能生效。
+	springboot的核心配置文件的写法不止一种。但是名称都是：application或以"application-"开头。
+	这个配置文件可以设置内嵌TomCat端口号、设置上下文contextPath等多种配置。
+
+	1.springboot核心配置文件之一：resources目录下的application.properties
+		如何设置内嵌TomCat端口号：
+			server.port=端口号值
+			例如：server.port=8081
+		
+		如何设置上下文contextPath：
+			server.servlet.context-path=contextPath值
+			例如：server.servlet.context-path=/03_springBoot_contextPath  注意：设置上下文contextPath时必须以斜杠'/'开头
+
+	2.springboot核心配置文件之一：resources目录下的application.yml
+		如何设置内嵌TomCat端口号和上下文contextPath：
+			server:
+			  port: 端口号值
+			  servlet:
+			    context-path: contextPath值
+			例如：
+				server:
+				  port: 8080
+				  servlet:
+				    context-path: /springboot
+				 注意：在yml文件中编写值的前面必须加一个空格，此时8080和/springboot前面都有一个空格。
+
+	3.springboot核心配置文件之一：resources目录下的application.yaml
+		application.yaml和application.yml展示和编写是完全一样的，只不过两者的后缀不同罢了。
+
+	4.总结：
+		虽然核心配置文件有3种，分别是不同的后缀，但是作用是一样的，而且名称也都叫：application或以"application-"开头。
+
+5.多环境下的核心配置文件
+	工作中开发的环境有哪些：
+		开发环境、测试环境、准生产环境、生产环境。
+
+	此时我们一般是一个环境对应一个配置文件，但是这些配置文件的命名有规范：必须以"application-"开头。
+	例如：
+		开发环境配置文件：application-develop.properties   或   application-develop.yml
+		测试环境配置文件：application-test.properties   或   application-test.yml
+		准生产环境配置文件：application-ready.properties   或   application-ready.yml
+		生产环境配置文件：application-product.properties   或   application-product.yml
+
+	注意：写好这些多环境配置文件后，我们还需要去指定使用哪一个配置文件。
+		如何指定？
+			在application.properties或application.yml这个主核心配置文件中指定：
+				语法：
+					spring.profiles.active=指定的文件名（"-"后面的名字）
+					或
+					spring:
+					  profiles:
+					    active: 指定的文件名（"-"后面的名字）
+
+					例如：
+						spring.profiles.active=develop    //这里指定使用application-develop.properties配置文件
+
+6.在springboot核心配置文件中自定义配置并将其取出
+	springboot的核心配置文件中不仅能用springboot定义好的配置，也可以自定义一些配置进去。
+	例如：
+		在application.properties中加入以下键值对：
+			school.name=bjpowernode
+			websit=http://www.bjpowernode.com
+
+			这些键值对是可以取出来的使用的，并且不需要像以往一样引入配置文件了。
+			只需要在属性的上方加入@Value注解就能取出数值并为属性赋值了。
+			语法：
+				@Value("${key}")
+			例如：
+				    @Value("${school.name}")
+				    private String schoolName;
+
+				    @Value("${websit}")
+				    private String websit;
+
+	在springboot核心配置文件中自定义配置的好处所在：不需要像以往一样引入配置文件了，可以直接使用@Value注解取出数值。
+
+7.如何将sprigboot核心配置文件中的自定义配置映射到一个对象？
+	需要定义一个普通类，并在类的定义上加@Component注解，将类交给spring容器管理。
+	然后还得在类的定义上面加入@ConfigurationProperties(prefix = "自定义配置的前缀")注解，注解里面的prefix属性必须有值。
+
+	@ConfigurationProperties(prefix = "自定义配置的前缀")：表示将springboot核心配置文件中的自定义配置映射到该类的对象中。
+	prefix：springboot核心配置文件中的自定义配置的前缀。
+
+	例如：
+		springboot核心配置文件：
+			school.name=bjpowernode
+			school.websit=http://www.bjpowernode.com   //school就是这个自定义配置的前缀
+
+		School类：
+			@Component  //将此类交给spring容器
+			@ConfigurationProperties(prefix = "school")
+			public class School {
+			    private String name;
+			    private String websit;
+			    get和set方法....
+
+		这个School类的对象的name和websit属性就会被school.name=bjpowernode和school.websit=http://www.bjpowernode.com赋值。
+		而这个对象因为@Component注解被创建并放在了spring容器中，需要时可以直接从spring容器中拿对象。
+
+	注意：这个被映射的类必须有set和get方法。
+
+8.springboot整合jsp
+	第一步：添加依赖：
+		<!-- 引入springboot内嵌Tomcat对jsp的解析依赖 -->
+		<!-- 仅仅展示jsp页面，所以只添加以下一个依赖 -->
+		<dependency>
+			<groupId>org.apache.tomcat.embed</groupId>
+			<artifactId>tomcat-embed-jasper</artifactId>
+		</dependency>
+
+	第二步：手动指定jsp最后编译的路径
+		springboot项目默认使用的前端引擎时thymeleaf
+		现在我们要使用springboot集成jsp，需要手动指定jsp最后编译的路径，
+		而且springboot编译jsp的路径是springboot规定好的位置：META-INF/resources
+		如何指定：
+			在pom.xml文件的<build> 标签中编写：
+				<resources>
+					<resource>
+						<directory>src/main/webapp</directory>
+						<!-- 指定编译到META-INF/resources -->
+						<targetPath>META-INF/resources</targetPath>
+						<!-- 指定哪些资源要进行编译 -->
+						<includes>
+							<include>*.*</include>
+						</includes>
+					</resource>
+				</resources>
+
+9.springboot如何配置视图解析器
+	视图解析器需要在springboot的核心配置文件中进行配置。
+	语法：
+		spring.mvc.view.prefix=前缀
+		spring.mvc.view.suffix=后缀
+		例如：
+			spring.mvc.view.prefix=/
+			spring.mvc.view.suffix=.jsp
+
+	springboot配置视图解析器非常简单明了，只需要在核心配置文件中加入这两行代码即可。
+
+10.springboot集成mybatis
+	1.添加依赖
+		- mysql驱动
+		- mybatis整合springboot框架的起步依赖
+
+	2.使用mybatis提供的逆向工程生成实体bean、映射文件、dao接口。
+		想实现逆向工程有两步：
+			第一步：新建一个xml配置文件，用来连接数据库、指定生成实体bean、映射文件、dao接口等操作：
+				例如 GeneratorMapper.xml.
+			第二部：在pom.xml文件的<build>标签中新增一个插件，点击即可生成实体bean、映射文件、dao接口。
+
+			注意：使用逆反工程生成的mapper映射文件一定要检查<resultMap>标签的id是否同名，
+			      sql语句的id是否同名，是否有多余的sql语句，不然容易出现bug。
+
+			GeneratorMapper.xml：
+				<?xml version="1.0" encoding="UTF-8"?>
+				<!DOCTYPE generatorConfiguration
+					PUBLIC "-//mybatis.org//DTD MyBatis Generator Configuration 1.0//EN"
+					"http://mybatis.org/dtd/mybatis-generator-config_1_0.dtd">
+				<generatorConfiguration>
+				    <!--mysql 连接数据库jar 这里选择自己本地位置-->
+				    <classPathEntry
+					    location="E:\MySQL\mysql-connector-java\mysql-connector-java-8.0.19.jar"/>
+				    <context id="tables" targetRuntime="MyBatis3">
+					<commentGenerator>
+					    <!-- 是否去除自动生成的注释 true：是 ： false:否 -->
+					    <property name="suppressAllComments" value="true"/>
+					</commentGenerator>
+					<!--数据库连接的信息：驱动类、连接地址、用户名、密码 -->
+					<jdbcConnection driverClass="com.mysql.cj.jdbc.Driver"
+							connectionURL="jdbc:mysql://localhost:3306/springboot? useUnicode=true&amp;characterEncoding=utf8&amp;serverTimezone=GMT"
+							userId="root"
+							password="hxr001223">
+					</jdbcConnection>
+
+					<!--
+					    逆工程生成model类，targetPackage指定model类的包名，targetProject指定
+					    生成的model放在哪个工程下面
+					 -->
+					<javaModelGenerator targetPackage="com.bjpowernode.springboot.model"
+							    targetProject="src/main/java">
+					    <property name="enableSubPackages" value="false"/>
+					    <property name="trimStrings" value="false"/>
+					</javaModelGenerator>
+
+					<!-- 逆工程生成mapper文件 -->
+					<sqlMapGenerator targetPackage="com.bjpowernode.springboot.mapper"
+							 targetProject="src/main/java">
+					    <!-- enableSubPackages:是否让schema作为包的后缀 -->
+					    <property name="enableSubPackages" value="false"/>
+					</sqlMapGenerator>
+
+					<!-- 逆工程生成mapper文件对应的dao接口 -->
+					<javaClientGenerator type="XMLMAPPER"
+							     targetPackage="com.bjpowernode.springboot.mapper"
+							     targetProject="src/main/java">
+					    <!-- enableSubPackages:是否让schema作为包的后缀 -->
+					    <property name="enableSubPackages" value="false"/>
+					</javaClientGenerator>
+
+					<!-- 指定数据库表  多个表示,可用多个table标签
+					    作用：指定为哪张表生成对应的实体类、dao接口、mapper映射文件
+					    tableName：指定表面
+					    domainObjectName：指定生成对应的实体类的类名。
+					-->
+					<table tableName="t_student" domainObjectName="Student"
+					       enableCountByExample="false"
+					       enableUpdateByExample="false"
+					       enableDeleteByExample="false"
+					       enableSelectByExample="false"
+					       selectByExampleQueryId="false"/>
+				    </context>
+				</generatorConfiguration>
+
+		pom.xml新增插件：
+			<!-- mybatis逆向工程插件 -->
+			<plugin>
+				<groupId>org.mybatis.generator</groupId>
+				<artifactId>mybatis-generator-maven-plugin</artifactId>
+				<version>1.3.6</version>
+				<configuration>
+					<!-- 配置文件的位置 -->
+					<configurationFile>GeneratorMapper.xml</configurationFile>
+					<verbose>true</verbose>
+					<overwrite>true</overwrite>
+				</configuration>
+			</plugin>
+					
+	3（3步骤二选一）.在dao接口的定义上添加一个注解：@Mapper
+			@Mapper：作用是扫描Dao接口到spring容器。
+			springboot框架已经不需要去spring配置文件里写声明SqlsessionFactoryBean等配置代码了。
+			直接在dao接口的定义上添加一个@Mapper注解就可以扫描Dao接口到spring容器，进而创建该接口的实现类对象。
+
+			注意：使用这个@Mapper注解后，在service层注入dao对象时可能还是会报红，但是无需在意，并不影响程序正常进行。
+
+	3（3步骤二选一）.直接在Application这个springboot启动类的定义上添加一个注解：@MapperScan
+			@MapperScan作用：扫描dao接口的包以及子目录，目的是创建所有dao接口的实现类对象。
+			试想，如果有很多dao接口，那么给每个dao接口都添加@Mapper注解岂不是很麻烦？
+				因此我们可以使用@MapperScan注解解决这个烦恼。用了这个注解就不需要使用@Mapper注解了。
+			语法：
+				@MapperScan(basePackages = "dao接口所在的包名")
+				例如：
+					@MapperScan(basePackages = "com.bjpowernode.springboot.mapper")
+
+	4.在springboot核心配置文件中设置连接数据库的配置
+		#设置连接数据库的配置
+		spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
+		spring.datasource.url=jdbc:mysql://localhost:3306/springboot? useUnicode=true&characterEncoding=utf8&serverTimezone=GMT%2B8
+		spring.datasource.username=root
+		spring.datasource.password=hxr001223
+
+	6.在pom.xml文件中手动指定对src/main/java目录下的xml文件进行编译（该步骤看情况二选一）
+		如果把mapper映射文件和dao接口放在同一目录下，就必须指定，如果没放则可忽略。
+		如何指定：在<build>标签下配置如下代码
+			<resources>
+				<resource>
+					<directory>src/main/java</directory>
+					<includes>
+						<include>**/*.xml</include>
+					</includes>
+				</resource>
+			</resources>
+
+	6.在springboot核心配置文件中指定mapper映射文件的路径（该步骤看情况二选一）
+		如果把mapper映射文件放在resources这个目录下了，就必须在springboot核心配置文件中指定mapper映射文件的路径。
+		如何指定：
+			在springboot核心配置文件中编写：
+			mybatis.mapper-locations=classpath:mapper映射文件的路径
+			例如：mybatis.mapper-locations=classpath:mapper/*.xml   //指定的是：resources/mapper/目录下的所有.xml文件。classpath:代表resources/。
+
+11.springboot框架如何使用事务功能
+	springboot框架使用事务非常简单，只需要进行一步操作即可。
+	在需要添加事务的方法定义上添加@Transaction这个注解就行了，这样这个方法就被赋予了事务功能。
+	例如：以下是service层的一个业务方法。我们为它添加事务。
+		    @Transactional
+		    public int updateStudentById(Student student) {
+			int res=studentMapper.updateByPrimaryKeySelective(student);
+			//int i=20/0;
+			return res;
+		    }
+
+12.springmvc的常用注解
+	1.@Controller ： 声明控制层，并创建控制层bean。
+	2.@RestController： 可以替代@Controller+@ResponseBody，在类的上面声明@RestController后，就不用声明@Controller了，
+			    并且该类的每个方法上都默认添加了@ResponseBody，所有也不用声明@ResponseBody了。
+			    意味着当前控制层类中的方法返回的都是对象类型。
+
+	3.@GetMapping：和@RequestMapping差不多，相当于@RequestMapping(value="xxx",method=RequestMethod.GET)，
+		       @GetMapping只能接收get请求，其他的请求方式都会报错405。该注解通常在查询数据时使用。
+
+	4.@PostMapping：和@RequestMapping差不多，相当于@RequestMapping(value="xxx",method=RequestMethod.POST)，
+		        @PostMapping只能接收post请求，其他的请求方式都会报错405。该注解通常在新增数据时使用。
+
+	5.@DeleteMapping：和@RequestMapping差不多，相当于@RequestMapping(value="xxx",method=RequestMethod.DELETE)
+			  该注解通常在删除数据时使用。
+
+	6.@PutMapping：和@RequestMapping差不多，相当于@RequestMapping(value="xxx",method=RequestMethod.PUT)，
+		       该注解通常在修改数据时使用。
+
+13.springboot实现RESTful
+	1.REST是什么？
+		REST是一种互联网架构设计的风格，它提出了一组客户端和服务器交互时的架构理念和设计原则，
+		基于这种理念和原则设计的接口可以更简洁，更有层次。
+		任何的技术都能实现这种理念。
+	
+	2.RESTful是什么？
+		如果一个架构符合REST原则，那么就称它为RESTful架构。
+
+	3.springboot开发使用RESTful
+		springboot开发RESTful主要是几个注解实现：
+		1.@PathVariable
+			该注解是RESTful最主要的一个注解。
+			作用：从地址中获取参数。
+
+		2.@PostMapping
+		3.@DeleteMapping
+		4.@PutMapping
+		5.@GetMapping
+
+		RESTful的请求风格就是把请求参数放到请求路径里面，然后通过@PathVariable将请求参数取出。
+
+		以下代码展示RESTful：		
+		    //现在开始展示RESTful风格的请求
+		    @GetMapping(value = "/student/detail/{id}/{age}")
+		    public Object student1(@PathVariable("id") Integer id,@PathVariable("age") Integer age){
+			Student student=new Student();
+			student.setId(id);
+			student.setAge(age);
+			return student;
+		    }
+
+		RESTful以/student/detail/{id}/{age}这种方式把id参数和age参数放在了地址栏里，
+		而@PathVariable注解的作用就是获取地址栏中的参数。
+
+		注意：在使用RESTful风格的请求时，最好不要使用@RequestMapping注解，容易出现请求路径冲突而报错。
+		      所以要根据需求使用这四种注解：@PostMapping、@DeleteMapping、@PutMapping、@GetMapping。
+
+	4.使用RESTful风格的请求时，出现请求路径冲突怎么解决？
+		有两种方法：
+			第一种：使用区分请求方式的方法来解决
+				不使用@RequestMapping注解，根据需求使用这四种注解：@PostMapping、@DeleteMapping、@PutMapping、@GetMapping。
+
+			第二种：通过修改请求参数在地址栏的位置来解决
+				例如：
+					修改前：
+					@GetMapping(value = "/student/detail/{id}/{age}")和@GetMapping(value = "/student/detail/{name}/{email}")
+					如果以上两种请求同时存在，那么服务器就会报错，因为服务器不知道你发送的是哪个请求。
+					这时我们可以通过修改请求参数在地址栏的位置来解决这个问题。
+
+					修改后：
+					@GetMapping(value = "/student/detail/{id}/{age}")和@GetMapping(value = "/student/{name}/detail/{email}")
+					这样子就不会报错了，因为地址栏的路径都改变了，服务器就知道你发送的是哪个请求了。
+
+		将两种方法结合使用，就能避免出现请求路径冲突。
+
+	5.使用RESTful风格的请求时，需注意的地方
+		使用RESTful风格的请求时，尽量不要在路径中使用动词，
+		不是说用了会报错，而是这是使用RESTful的潜规则，尽量不要去违背。
+
+14.springboot集成dubbo
+	springboot使dubbo的编程变得更加简单了，不需要写dubbo的核心xml文件了。还有添加的依赖也和以前不同了。
+
+	1.springboot集成dubbo需要添加的依赖：
+		<!-- springboot框架web项目启动依赖 -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-web</artifactId>
+		</dependency>
+
+		<!-- dubbo集成springboot框架起步依赖 -->
+		<dependency>
+			<groupId>com.alibaba.spring.boot</groupId>
+			<artifactId>dubbo-spring-boot-starter</artifactId>
+			<version>2.0.0</version>
+		</dependency>
+
+		<!-- 注册中心依赖 -->
+		<dependency>
+			<groupId>com.101tec</groupId>
+			<artifactId>zkclient</artifactId>
+			<version>0.10</version>
+		</dependency>
+
+		<!-- 接口工程依赖 -->
+		<dependency>
+			<groupId>com.bjpowernode.springboot</groupId>
+			<artifactId>15-springboot-dubbo-interface</artifactId>
+			<version>1.0-SNAPSHOT</version>
+		</dependency>
+
+		在添加依赖方面，服务提供者和服务消费者添加的依赖是一样的。
+
+	2.服务提供者需要在springboot的核心配置文件中做如下配置：
+		#设置内嵌tomcat端口号（端口号可改，但不能和服务消费者的端口号相同）
+		server.port=8081
+		#设置上下文根（可自定义修改）
+		server.servlet.context-path=/
+
+		#设置dubbo的配置
+		#声明服务提供者名称
+		spring.application.name=015-springboot-dubbo-provider
+		#声明当前工程是服务提供者 true:表示服务提供者
+		spring.dubbo.server=true
+		#指定注册中心
+		spring.dubbo.registry=zookeeper://localhost:2181
+
+	3.服务消费者需要在springboot的核心配置文件中做如下配置：	
+		#设置内嵌tomcat端口号
+		server.port=8080（端口号可改，但不能和服务提供者的端口号相同）
+		#设置上下文根（可自定义修改）
+		server.servlet.context-path=/
+
+		#设置dubbo的配置
+		#声明服务消费者名称
+		spring.application.name=15-springboot-dubbo-consumer
+		#指定注册中心
+		spring.dubbo.registry=zookeeper://localhost:2181
+
+	4.那么提供者如何暴露接口呢？
+		只需要在接口实现类中加入两个注解即可暴露接口。
+		先上代码：
+			@Component
+			@Service(interfaceClass = StudentService.class,version = "1.0.0,",timeout = 15000)
+			public class StudentServiceImpl implements StudentService {
+			    public Integer queryAllStudentCount() {
+				return 52;
+			    }
+			}
+
+		如代码所示，只需要@Component和@Service这两个注解即可。
+		@Component：创建对象，将对象放入到spring容器中。
+		@Service：这个@Service不是service层用来创建对象的那个@Service，而是com.alibaba.dubbo.config.annotation.Service包下的@Service，
+			  专门用于dubbo服务提供者暴露接口服务时使用。
+			  属性：
+				interfaceClass：需要暴露的服务接口。
+				version：服务的版本号。
+				timeout：服务的超时时间。超出时间会报超时异常。
+				interfaceName：需要暴露的服务接口的全限定类名，该属性和interfaceClass属性选其一添加即可。
+
+	5.服务消费者如何引用远程接口服务呢？
+		只需要在服务接口引用的定义上加入一个注解即可拿到服务接口的实现bean。
+		先上代码：
+			@Controller
+			public class StudentController {
+
+			    @Reference(interfaceClass = StudentService.class,version = "1.0.0",check = false)
+			    private StudentService studentService;
+
+			    @RequestMapping(value = "/student/count")
+			    @ResponseBody
+			    public Object studentCount(){
+				Integer count=studentService.queryAllStudentCount();
+				return "学生总人数为："+count;
+			    }
+			}
+
+		如代码所示：只需要@Reference这一个注解即可拿到服务接口的实现bean。
+		@Reference：这个@Reference来自com.alibaba.dubbo.config.annotation.Reference包下，
+			    专门用于dubbo服务消费者引用远程接口服务时使用。
+			    属性：
+				interfaceClass：需要引用的服务接口。
+				version：服务的版本号。
+				check：dubbo的启动时检查，false为关闭检查。
+				interfaceName：需要引用的服务接口的全限定类名，该属性和interfaceClass属性选其一添加即可。
+
+	6.开启dubbo配置
+		在springboot项目的启动类上再添加一个注解：@EnableDubboConfiguration
+			作用：开启dubbo配置，只有加上了这个注解，我们设置的有关dubbo的配置才能被扫描到。
+			例如：
+				@SpringBootApplication
+				@EnableDubboConfiguration //开启dubbo配置
+				public class Application {
+					public static void main(String[] args) {
+						SpringApplication.run(Application.class, args);
+					}
+				}
+
+		不管是服务提供者还是服务消费者都需要添加这个注解。
+
+15.springboot启动程序
+	什么是springboot启动程序？
+		springboot启动类的main方法中的SpringApplication.run(Application.class, args);就是springboot启动程序。
+
+	springboot程序启动后，返回值是ConfigurableApplicationContext,它也是一个spring容器。
+	springboot启动程序其实相当于原来spring内容中的启动容器ClasspathXmlApplicationContext。
+	例如：
+		//获取spring容器
+		ConfigurableApplicationContext application=SpringApplication.run(Application.class, args);
+
+		//从spring容器中获取指定bean对象
+		StudentService studentService= (StudentService) application.getBean("studentServiceImpl");
+
+		//调用业务方法
+		String sayHello=studentService.sayHello();
+
+16.springboot非web工程的两种实现方式（了解内容）
+	第一种方式：
+		直接通过springboot的启动程序SpringApplication.run(Application.class, args);获取容器，例如：
+			//获取spring容器
+			ConfigurableApplicationContext application=SpringApplication.run(Application.class, args);
+		拿到容器后就可以取出对象了。
+
+	第二种方式：
+		让springboot的启动类实现一个接口：CommandLineRunner。
+		实现这个接口后就可以重写接口的run方法。在run方法中可以直接调用spring容器中的对象。
+		例如：
+			@SpringBootApplication
+			public class Application implements CommandLineRunner {
+
+				@Autowired
+				StudentService studentService;
+
+				public static void main(String[] args) {
+					//springboot启动程序，会初始化spring容器
+					SpringApplication.run(Application.class, args);
+				}
+
+				//重写CommandLineRunner类中的run方法
+				@Override
+				public void run(String... args) throws Exception {
+					//直接使用spring容器中的对象并调用方法
+					String sayHello=studentService.sayHello("world");
+					System.out.println(sayHello);
+				}
+			}
+			
+17.springboot使用拦截器
+	回顾springmvc使用拦截器的步骤：
+		只需两步：
+			第一步：定义类实现HandlerInterceptor接口。
+			第二步：在springmvc配置文件中声明拦截器，让框架知道拦截器的存在。
+
+	springboot使用拦截器同样也只需要两步：
+		第一步：定义类实现HandlerInterceptor接口。
+		第二部：创建一个配置类（相当于：在springmvc配置文件中声明拦截器）
+
+	具体步骤：
+		    1.定义一个拦截器类，实现HandlerInterceptor接口
+			- 在类中编写拦截方法
+		    2.定义一个配置类
+			在类的定义上添加@Configuration注解，表明这是一个配置类.
+			这个类还必须实现WebMvcConfigurer接口，并重写addInterceptors方法。
+			    作用：
+				相当于在springmvc配置文件中使用<mvc:interceptors>声明拦截器
+		    3.如何编写 addInterceptors 方法
+			方法样式：
+				public void addInterceptors(InterceptorRegistry registry) {}
+
+			方法的作用：添加拦截器，相当于在springmvc配置文件中使用<mvc:interceptors>声明拦截器。
+
+			方法参数：
+			    InterceptorRegistry registry：
+				InterceptorRegistry是拦截器注册类，需要通过registry参数把自己定义的拦截器注册进去。
+			    如何注册拦截器？
+				使用InterceptorRegistry类中的方法addInterceptor。
+				语法：
+				    registry.addInterceptor(拦截器的对象).addPathPatterns("需拦截的路径").excludePathPatterns("需排除的路径");
+				例如：
+				    registry.addInterceptor(new UserInterceptor()).addPathPatterns(addPathPatterns).excludePathPatterns(excludePathPatterns);
+
+				addInterceptor：添加哪个拦截器，相当于<mvc:interceptor>。
+				new UserInterceptor()：自定义的拦截器的对象。
+				addPathPatterns()：需要拦截的路径。
+				excludePathPatterns()：需要排除的路径。
+				addPathPatterns和excludePathPatterns：自定义的字符串或字符串数组，内容是路径，
+									如果有多个路径需要操作，就使用字符串数组；
+									如果只有一个路径需要操作，就使用普通字符串。
+
+18.springboot工程打war包
+	总共有5步：
+		1.在pom.xml文件中修改打包方式：
+		    <!-- 修改打包方式 -->
+		    <packaging>war</packaging>
+
+		2.pom.xml文件中的springboot编译打包插件必须存在，版本号无所谓！
+
+		3.在pom.xml文件中指定打war包的名称
+		    如何指定：
+			在<build>标签中编写如下代码：
+			    <!-- 指定打war包的名称 -->
+			    <finalName>war包的名称</finalName>
+
+		4.如果是打war包的话，必须让springboot的启动类继承SpringBootServletInitializer,并重写configure这个方法
+			例如以下这个springboot启动类：
+				@SpringBootApplication
+				public class Application extends SpringBootServletInitializer {
+					public static void main(String[] args) {
+						SpringApplication.run(Application.class, args);
+					}
+					@Override
+					protected SpringApplicationBuilder configure(SpringApplicationBuilder builder) {
+						//构建新资源
+						return builder.sources(Application.class);
+					}
+				}
+
+		5.之后只需要在maven的生命周期中执行package命令即可打出war包
+		    打出的war在哪里？
+			在target文件夹中
+
+	注意：如果是打war包，springboot核心配置文件中配置的tomcat端口号和上下文根就失效了，因为项目会部署到其他服务器。
+			
+19.springboot工程打jar包
+	springboot工程打jar没有打war包麻烦，只有一步是必须的。
+		1.@打jar包只有一步是必须的：
+		    必须手动指定springboot工程编译打包插件的版本号，版本号一定是1.4.2.RELEASE，其他都不行。
+					<plugin>
+						<groupId>org.springframework.boot</groupId>
+						<artifactId>spring-boot-maven-plugin</artifactId>
+						<version>1.4.2.RELEASE</version>
+					</plugin>
+		    哪怕版本号报红也无所谓，必须指定这个版本。
+
+		2.另外还可以通过<finalName>标签修改jar包的名称，如果不改的话jar包就默认是项目名称。
+
+		3.修改完插件版本号后只需要在maven的生命周期中执行package命令即可打出jar包。
+			打出的jar包在哪里？
+				在target文件夹中。
+
+	注意：如果是打jar包，springboot核心配置文件中配置的tomcat端口号和上下文根依然生效。
+
+20.springboot使用logback
+	logback日志是用来打印执行的sql语句和错误信息以及执行情况的。
+
+	springboot的web工程内部已经集成了logback，所以不需要添加logback的依赖也可以使用logback。
+	但是logback日志打印的内容已经被固定了，如果要打印自己想打印到日志里的东西，就必须添加一个依赖：
+		<dependency>
+			<groupId>org.projectlombok</groupId>
+			<artifactId>lombok</artifactId>
+			<version>1.18.12</version>
+		</dependency>
+		
+	springboot如何使用logback：
+			在resources目录下创建一个logback-spring.xml配置文件。
+			注意：取名有规定，必须是：logback-spring.xml ，并且必须放在resources目录下。
+			    文件内容可以直接网上复制。
+		
+		只需要做到这一步就可以就可以使用logback了，但是如果要打印自己想打印到日志里的东西，
+		需要在控制层类的定义上面再添加一个注解：@Slf4j
+		添加了这个注解以后可以在控制器方法中通过log对象调用方法打印日志内容，log对象不用自己创建，可以直接用。
+		例如：
+		    @RequestMapping(value ="/student/count")
+			@ResponseBody
+			public String studentCount(){
+			    //自己打印的日志内容
+			    log.info("查询当前学生总人数");
+
+			    Integer count=studentService.queryStudentCount();
+			    return "学生总人数为："+count;
+			}
+		注意：idea必须下载lombok插件，不然会没有log对象。
+
+	logback文件：
+		内容过多，可以直接百度搜索：spring-logback.xml 
+
+21.Thymeleaf
+	1.概述：
+		- Thymeleaf是一个流行的模板引擎，该模板引擎采用java语言开发。
+
+		- Thymeleaf对网络环境不存在严格的要求，既能用于web环境下，也能用于非web环境下。
+		  在非web环境下，它能直接显示模板上的静态数据；在web环境下，它能像jsp一样从后台
+		  接收数据并替换掉模板上的静态数据。
+
+		- 它是基于html的，以html标签为载体，Thymeleaf要寄托在html标签下实现。
+	
+	2.为什么要使用Thymeleaf？
+		springboot集成了Thymeleaf模板技术，并且springboot官方也推荐使用Thymeleaf来替代jsp技术。
+
+	3.如何使用Thymeleaf？
+		第一步：
+			创建一个springboot项目，以往只需要勾选springboot项目集成web工程起步依赖：Web ----> Spring Web，
+			现在还需要再勾选一个springboot项目集成Thymeleaf起步依赖：Template Engines ----> Thymeleaf。
+
+			如果没有勾选起步依赖，那么在pom.xml文件中自己手动添加起步依赖是一样的效果。
+
+		第二步：
+			在resources目录下的templates目录中创建一个html页面用来展示结果
+			但是要在html的根标签中添加：xmlns:th="http://www.thymeleaf.org" 表示这是thymeleaf。
+			例如：
+			    <!DOCTYPE html>
+			    <html lang="en" xmlns:th="http://www.thymeleaf.org">
+			    <head>
+				<meta charset="UTF-8">
+				<title>message结果页面</title>
+			    </head>
+			    <body>
+			    </body>
+			    </html>
+		
+		这样一个thymeleaf页面就创建成功了
+
+		注意：templates目录下的页面必须通过中央调度器才能访问，否则访问不到。
+		      只有在templates目录下才能使用Thymeleaf。
+
+		。
+
+	4.控制器方法如何跳转到thymeleaf页面？
+		和之前跳转jsp的操作一样，同样是返回一个视图做跳转。
+		但是因为使用的是thymeleaf，而springboot已经集成了thymeleaf，所以不用配置视图解析器，直接返回名称就行。
+			不过如果有特定的需求，也可以配置thymeleaf模板引擎的前/后缀。例如：
+				#设置thymeleaf模板引擎的前/后缀
+				spring.thymeleaf.prefix=classpath:/templates/
+				spring.thymeleaf.suffix=.html
+
+	5.如何让thymeleaf页面的内容实时更新，不需要像之前重启服务器才能更新页面内容，只需要刷新页面就行了
+		第一步：
+			在springboot核心配置文件中关闭thymeleaf模板引擎的缓存：
+				spring.thymeleaf.cache=false
+
+		第二步：
+			设置服务器的两个选项：
+				将 "On 'Update' action:" 的选项设置为 "Update resources"；
+				将 "On frame deactivation:" 的选项设置为 "Update resources"
+			设置这两个选项的作用也是为了关缓存。
+
+	6.Thymeleaf的表达式
+		1.标准变量表达式（推荐使用）
+			语法：${变量名}
+			标准变量表达式使用${变量名}的方式获取Controller中Model的数据。
+			例如：
+				<h3 th:text="${user.id}">静态数据</h3>
+				获取的是user对象的id属性的数据。
+
+		2.选择变量表达式（星号表达式）：*{属性名}（不推荐使用）
+			语法：*{属性名}
+			先使用th:object="${对象名称}来绑定这个对象，才能使用*{属性名}获取对象属性。
+			例如：
+				    <div th:object="${user}">
+					用户编号：<span th:text="*{id}"></span><br>
+					用户名称：<span th:text="*{username}"></span><br>
+					用户年龄：<span th:text="*{age}"></span>
+				    </div>
+				因为div标签使用了th:object="${user}"来绑定了user这个对象，div的子标签才能使用th:text="*{属性名}"来获取属性。
+				此时的*{id}就好比${user.id}
+
+		3.标准变量表达式和选择变量表达式混合使用：*{变量名}（不推荐使用）
+			语法：*{变量名}
+			直接使用*{变量名}的方式获取Controller中Model的数据。
+			例如：
+				<h1>标准变量表达式和选择变量表达式的混合使用</h1>
+				用户编号：<span th:text="*{user.id}"></span><br>
+				用户名称：<span th:text="*{user.username}"></span><br>
+				用户年龄：<span th:text="*{user.age}"></span>
+				和标准表达式语法差不多，只是把$符号换成了*。
+
+		4.url路径表达式：@{...}
+			语法：@{路径}
+			路径不带参数：
+				例如：
+				    <h2>路径不带参数</h2>
+				    <a href="http://www.baidu.com">传统写法：跳转至百度</a><br>
+				    <a th:href="@{http://www.baidu.com}">路径表达式：跳转到百度</a>
+				    <a th:href="@{/url}">路径表达式使用相对路径：跳转到/url</a>
+			
+				路径表达式最主要就是使用相对路径，好处在于thymeleaf会自动在相对路径的前面加上上下文根，我们不需要自己写。
+
+			路径带参数：
+				例如：
+					    <h2>路径带参数</h2>
+					    <a href="/springboot/test?id=1002&username=张三">传统写法：带参数，跳转至/test</a><br>
+					    <a th:href="@{'/test?id='+${user.id}+'&username='+${user.username}}">
+							路径表达式：使用标准变量表达式获取参数，跳转至/test</a>
+
+				@{}内部可以使用字符串拼接的方式表示路径，在@{}内部用单引号''表示字符串。
+				路径表达式的内部可以使用标准表达式获取后台数据来充当路径的一部分。
+
+			路径带参数（另一种写法，强烈推荐）：
+				例如：
+					<a th:href="@{/test(id=${user.id},username=${user.username})}">
+						路径表达式：使用标准变量表达式获取参数，另一种写法</a>
+
+				这种写法强烈推荐，不是使用字符串拼接的方式，而是直接在()内填写参数，多个参数之间用逗号","隔开。
+				并且也可以使用标准表达式获取后台数据来充当参数。
+
+			请求路径为RESTful风格：
+				例如：
+				    <a th:href="@{'/test1/'+${user.id}}">路径表达式：RESTful风格的请求</a>
+				使用字符串拼接的方式完成给RESTful风格的请求传参。
+
+22.Thymeleaf常用的属性：
+	th:text    用来设置标签里的文本内容，例如：<span th:text="${user.id}"></span>
+	th:href    用来指定请求路径，例如：<a th:href="@{/url}">路径表达式使用相对路径：跳转到/url</a>
+	th:action  用来指定请求路径，例如：<form th:action="@{/test}"></form>
+	th:src     用来指定资源文件路径，例如：<img th:src="@{/img/001.jpg}"/>
+	th:value   用来指定value的内容
+	th:style   用来指定css的style属性
+	th:onclick 用来指定鼠标点击事件的函数
+	
+
+23.Thymeleaf的重要属性：
+		1.th:each   循环操作
+		    语法： th:each="当前循环的对象名称,表示当前循环对象状态的变量:被循环遍历的集合"
+			  或 th:each="当前循环的对象名称:被循环遍历的集合"
+
+		    例如：
+			<div th:each="user,userStat:${userList}"></div>
+				user  当前循环的对象变量名称（名称随意）
+				userStat  当前循环对象状态的变量（该变量可选择写或不写，不写的话该变量还是存在，变量名默认就是对象变量名+Stat）
+				${userList}  当前循环的集合
+
+			<div th:each="user:${userList}"></div>
+			userStat可以省略不写，但仍然存在，而且变量名称就是userStat
+
+		    总结："表示当前循环对象状态的变量"可以省略不写，但仍然存在，并且默认的名称就是："当前循环的对象名称"+Stat。
+
+		2.th:if   条件判断
+		    语法： th:if="判断语句"
+			例如：
+				   <div th:if="${sex}==1">
+				       男
+				   </div>
+				   如果从后台获取的数据${sex}的值等于1，就显示该div的内容，否则不显示该div。
+
+				   <div th:if="${flag}">
+					   flag结果为true
+				   </div>
+				   如果从后台获取的数据${flag}的值为true，就显示该div的内容，否则不显示该div。
+
+		    总结：只要 th:if="判断语句" 中的 "判断语句" 结果表现为true，就执行，反之则不执行。
+
+		3.th:unless   条件判断取反
+		    语法：th:unless="判断语句"
+		    用法：与 th:if 用法相反，即条件判断取反。
+		    例如：
+			<div th:unless="!${flag}">
+				flag结果取反为false
+			</div>
+			后台获取${flag}的值为true，所以!${flag}就是false，因此显示该div的内容，否则不显示该div。
+
+		    总结：只要 th:unless="判断语句" 中的 "判断语句" 结果表现为false，就执行，反之则不执行。
+
+		4.th:switch 和 th:case  判断操作
+			例如：
+				<div th:switch="${productType}">
+				    <span th:case="0">productType的值为0</span>
+				    <span th:case="1">productType的值为1</span>
+				    <span th:case="2">productType的值为2</span>
+				    <span th:case="*">无此产品</span>
+				</div>
+				因为后台获取到的${productType}值为0，所以只有th:case="0"的<span>显示在了页面中，其他<span>都不显示。
+				如果后台获取到的${productType}值不为0/1/2,那么只有th:case="*"的<span>会显示在页面中。
+
+			总结：th:switch 和 th:case 语句判断一个变量与一系列值中某个值是否相等，每个值都为一个分支。
+
+		5.th:inline   内敛表达式
+			th:inline有三个取值类型：text、javascript、none，其中none什么都不做，没有效果。
+			
+			1.内敛文本（th:inline="text"）
+			    之前我们拿数据都是在标签的属性中使用${}获取数据，例如：<div th:text="${}"></div>
+			    而使用内敛表达式th:inline="text"，就可以直接在页面的任何地方使用 [[${}]] 获取数据。
+			    获取数据的语法：[[${..}]]
+			    例如：
+				<body th:inline="text">
+				    <h1>内敛文本  th:inline="text"</h1>
+				    数据：[[${data}]]
+				</body>
+				在body标签上使用th:inline="text"，标明这是内敛文本，之后body标签内的任何地方都可以直接使用[[${..}]]获取后台数据。
+				当然不止是body标签，在其他标签上也可以添加th:inline="text"，
+				在添加了th:inline="text"的标签中就可以使用[[${..}]]获取后台数据。
+
+			2.内敛脚本（th:inline="javascript"）
+			    在<script>标签上用th:inline="javascript"表明这是个内敛脚本后，就可以在脚本内使用[[${..}]]获取后台数据。
+			    获取数据的语法：[[${..}]]
+			    例如：
+				    <script type="text/javascript" th:inline="javascript">
+					function showData(){
+					    alert([[${data}]]);
+					}
+				    </script>
+				    在<script>标签上使用了th:inline="javascript"，标明这是个内敛脚本，
+				    之后<script>标签内的任何地方都可以直接使用[[${..}]]获取后台数据。
+
+24.Thymeleaf的字符串拼接
+	thymeleaf对字符串拼接操作有一个专门的方式，语法：|要拼接的字符串|
+	之前用的拼接方式：
+		<span th:text="'共'+${rows}+'条数据，当前是第'+${page}+'条'"></span>
+
+	这种拼接方式当然也可以实现字符串拼接操作，但是thymeleaf有一种更方便字符串拼接操作，使用：|要拼接的字符串|
+
+	thymeleaf专门的字符串拼接方式：
+		<span th:text="|共${rows}条数据，当前是第${page}条|"></span>
+
+25.Thymeleaf中的运算符转译写法
+	在Thymeleaf中，有些运算符是无法直接写出来的，需要用转译的方式表达。
+	>   转译 gt
+	<   转译 lt
+	>=  转译 ge
+	<=  转译 le
+
+26.Thymeleaf的基本表达式对象
+	模板引擎提供了一组内置的对象，这些内置的对象可以直接在模板中使用，这些对象由#号开头。
+	1.#request
+	    通过#request对象，可以获取request对象中的数据。
+	    例如：
+		<script type="text/javascript" th:inline="javascript">
+			function path(){
+			    //获取协议名称
+			    var scheme=[[${#request.getScheme()}]];
+			    //获取服务器名称
+			    var serverName=[[${#request.getServerName()}]];
+			    //获取服务器端口号
+			    var serverPort=[[${#request.getServerPort}]];
+			    //获取上下文根
+			    var contextPath=[[${#request.getContextPath()}]];
+
+			    var allPath=scheme+"://"+serverName+":"+serverPort+contextPath;
+			    alert(allPath);
+			}
+		    </script>
+
+	2.#session
+	    通过#session对象，可以获取session对象中的数据。
+	    从sesion中获取数据有三种方式：
+		第一种：${#session.getAttribute('key')}
+		    例如：<span th:text="${#session.getAttribute('address')}"></span>
+
+		第二种：${#HttpSession.getAttribute('key')}
+		    例如：<span th:text="${#httpSession.getAttribute('address')}"></span>
+
+		第三种：${session.key}
+		    例如：<span th:text="${session.address}"></span>
+
+27.Thymeleaf的功能表达式对象
+	模板引擎提供的一组功能性内置对象，可以在模板中直接使用这些对象提供的功能方法，
+	工作中常用的数据类型，如集合、时间、数值，可以使用thymeleaf提供的功能对象来处理它们。
+	内置功能对象前需要加#号，内置对象一般以s结尾。
+
+	1.#dates 处理时间的对象
+	    例如：<div th:text="${#dates.format(time,'yyyy-MM-dd HH:mm:ss')}">修改时间格式</div>
+
+	2.#strings  处理字符串的对象
+	    例如：<div th:text="${#strings.substring(data,0,10)}">从0下标开始，截取下标9，因为[0,10),这个方法是左闭右开区间。</div>
+
+	内置功能对象有很多，这里只列出两个。
+
+
+
+			
+				
+
+	
+		
+
+	

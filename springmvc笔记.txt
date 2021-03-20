@@ -1,0 +1,656 @@
+1.SpringMVC是什么？
+	SpringMVC是基于spring的一个框架，实际上就是spring的一个模块，专门做web开发的。
+	可以理解为servlet的升级。
+
+	web开发底层是servlet，SpringMVC框架是在servlet的基础之上加入一些功能，让你做web开发更方便。
+
+	SpringMVC能够创建对象，并将对象放入到容器中(SpringMVC容器)，springmvc容器中放的是控制器对象，
+	我们要做的是使用@Controller注解创建控制器对象，把对象放入到springmvc容器中，把创建的对象当作控制器使用，
+	这个控制器对象能接收用户的请求，显示处理结果，就当作是一个servlet使用。
+
+	实际上使用@Controller注解创建的是一个普通类的对象，不是servlet，但是springmvc赋予了对象一些额外的功能，
+	使这个对象可以像servlet一样去接收请求、显示处理结果。
+
+	实现原理：web开发底层是servlet，springmvc中有一个对象是servlet：DispatcherServlet(中央调度器)。
+		  DispatcherServlet：这个servlet对象负责接收用户的所有请求，当用户把请求给了DispatcherServlet之后，
+				    DispatcherServlet就把请求转发给我们用@Controller注解创建的对象，
+				    最后是@Controller注解创建的对象处理请求。
+
+	流程分析：
+		用户发送请求时:
+		index.jsp------>DispatcherServlet(servlet对象)----转发，分配给-----Controller对象(使用@Controller注解创建的对象)处理请求
+
+		处理完请求之后：
+		Controller对象(使用@Controller注解创建的对象)------>DispatcherServlet(servlet对象)----->index.jsp
+
+	注意：处理用户提交的请求，springmvc中是使用方法来处理的。（控制器类中的方法）
+
+2.SpringMVC的优点
+	1.基于MVC架构，功能分工明确，解耦合。
+	2.SpringMVC是轻量级的，jar包很小，不依赖特定的接口和类。
+	3.作为spring框架的一部分，能够使用spring的IOC和AOP，方便整合其他框架。
+	4.SpringMVC能强化注解的使用，在控制器、Service、Dao都可以使用注解，方便灵活。
+		使用@Controller创建处理器对象，
+		使用@Service创建业务对象，
+		使用@Autowired或者@Resource在控制类中注入Service，在Service类中注入Dao。
+
+3.springmvc中的注解：
+	1.@Controller
+		作用是创建控制器对象。
+		使用位置：控制器类的上面。
+
+	2.@RequestMapping
+		把一个请求地址和一个方法绑定在一起。一个请求指定一个方法处理。
+		用@RequestMapping修饰的方法叫做处理器方法，可以用来处理请求。
+		使用位置：
+			1.在一个方法上面。
+			2.在类的上面。
+		属性：
+			1.value：是一个String[]，用来表示请求的uri地址的。value的值是唯一的。
+				  value中可以编写多个uri地址，例如：@RequestMapping(value={"/some.do","/first.do"...})
+			2.method 指定请求的方式，它的值是RequestMethod类的枚举值。
+			3.produces 可以指定新的响应编码方式ContentType，因为在响应ajax请求时过滤器会失效，必须用该属性指定
+				   新的响应编码方式，否则响应的数据中会出现中文乱码问题。
+			
+
+	3.@RequestParam
+		解决请求中参数名和处理器方法的形参名不一样的问题。
+
+	4.@ResponseBody
+
+	5.@RestController： 可以替代@Controller+@ResponseBody，在类的上面声明@RestController后，就不用声明@Controller了，
+			    并且该类的每个方法上都默认添加了@ResponseBody，所有也不用声明@ResponseBody了。
+			    意味着当前控制层类中的方法返回的都是对象类型。
+
+	6.@GetMapping：和@RequestMapping差不多，相当于@RequestMapping(value="xxx",method=RequestMethod.GET)，
+		       @GetMapping只能接收get请求，其他的请求方式都会报错405。该注解通常在查询数据时使用。
+
+	7.@PostMapping：和@RequestMapping差不多，相当于@RequestMapping(value="xxx",method=RequestMethod.POST)，
+		        @PostMapping只能接收post请求，其他的请求方式都会报错405。该注解通常在新增数据时使用。
+
+	8.@DeleteMapping：和@RequestMapping差不多，相当于@RequestMapping(value="xxx",method=RequestMethod.DELETE)
+			  该注解通常在删除数据时使用。
+
+	9.@PutMapping：和@RequestMapping差不多，相当于@RequestMapping(value="xxx",method=RequestMethod.PUT)，
+		       该注解通常在修改数据时使用。
+		
+
+4.springmvc的视图解析器
+	作用：可以帮助开发人员设置视图文件的路径 
+	语法：在springmvc的xml配置文件中编写：
+		    <bean class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+			<!-- 前缀：视图文件的路径。  注意：前后都有斜杠"/" -->
+			<property name="prefix" value="/WEB-INF/view/"/>
+			<!-- 后缀：表示视图文件的扩展名 -->
+			<property name="suffix" value=".jsp"/>
+		    </bean>
+
+	设置视图解析器前：
+		mv.setViewName("/WEB-INF/view/show.jsp");  需要如此编写才能指定视图文件的路径
+
+	设置视图解析器后：
+		mv.setViewName("show");   //这种写法只有在设置了视图解析器后才能用，只需要视图文件的名称就行了。
+
+5.详解@RequestMapping注解的使用（实例02）
+	该注解可以放在类上面，也可以放在方法上面。
+	当该注解放类上面时：便于修改路径。
+		@RequestMapping：
+		       value：当这个注解放在类上面时，该属性填写的是所有请求的公共部分，叫做模块名称。
+		例如：@RequestMapping(value = "/test")
+
+		当类上面没有加 @RequestMapping(value = "/test")时：
+			方法上的@RequestMapping中的value需要如此编写：@RequestMapping(value = "/test/some.do")
+		当类上面加了 @RequestMapping(value = "/test")时：
+			方法上的@RequestMapping中的value可以如此编写：@RequestMapping(value = "/some.do")
+		区别：可以去掉some.do前面的模块名称。
+		这么做的好处就是：当some.do前面的模块名称修改时，只需要修改类上面的 @RequestMapping(value = "/test") 注解即可，
+				  方法上面的 @RequestMapping(value = "/some.do")注解不需要动，
+				  试想：如果这个类里多个方法上的@RequestMapping注解都有共同的模块名称，那么当模块名称修改时，
+					就需要改动每个方法的@RequestMapping注解，此时如果在类上面用@RequestMapping注解设置了
+					每个方法共同的模块名称，这样当模块名称修改时就只需要修改类上面的@RequestMapping注解即可。
+
+	当该注解用在方法上面时：
+		注解中有一个属性：method
+		method：指定请求的方式，它的值是RequestMethod类的枚举值。
+                   例如：表示get请求方式，RequestMethod.GET
+                         表示post请求方式，RequestMethod.POST
+		method属性的好处：可以保证请求一定是自己指定的方式，如果请求不是自己指定的方式，网页会报405错误。
+
+6.如何接收用户所提交的参数（实例03）
+	接收请求的参数使用的是处理器方法的形参
+	处理器方法可以包含以下四类参数，这些参数会在系统调用时由系统自动赋值，即程序员可以在方法内直接使用：
+		- HttpServletRequest
+		- HttpServletResponse
+		- HttpSession
+		- 请求中所携带的请求参数
+
+	注意：
+		在提交请求参数时，get请求方式中文没有乱码。
+		使用post方式提交请求，中文有乱码，需要使用过滤器处理乱码的问题。
+	
+	如何接收用户在请求中所携带的请求参数，由两种方案：
+		1.逐个接收
+			逐个接收请求的参数：
+			  要求：处理器方法的形参名和请求中参数名必须一致，按名称接收参数，和位置无关，
+				同名的请求参数赋值给同名的形参。
+			  例如：
+				提交参数的表单：
+				    <form action="receiveparam.do" method="post">
+					姓名：<input type="text" name="name"><br>
+					年龄：<input type="text" name="age"><br>
+					<input type="submit" value="提交参数">
+				    </form>
+				接收参数的方法：
+					    @RequestMapping(value = "/receiveparam.do")
+					    public ModelAndView doFirst(String name,int age){
+						ModelAndView mv=new ModelAndView();
+						mv.addObject("myname","name="+name);
+						mv.addObject("myage","age="+age);
+						mv.setViewName("show");
+						return  mv;
+					    }
+
+			  原理：
+				第一步：先使用request对象接收请求参数
+					String name=request.getParameter("name");
+					String age=request.getParameter("age");
+				第二步：springmvc框架通过 DispatcherServlet 调用 MyController的doFirst()方法
+					调用方法时，按名称对应，把接收的参数赋值给形参。
+					doFirst(name,Integer.valueOf(age))
+					框架会提供类型转换的功能，能把String转为int、long、float、double等类型。
+
+			  如果请求中参数名和处理器方法的形参名不一样时：
+				使用@RequestParam：解决请求中参数名和处理器方法的形参名不一样的问题。
+				属性：1.value  请求中的参数名称。
+				      2.required  是一个boolean，默认值为true，
+     *						  当值为true时：表示请求中必须包含此参数，否则400报错。
+				使用位置：在处理器方法的形参定义的前面。
+				语法：在处理器方法的形参定义的前面加@RequestParam(value="请求中的参数名")
+				例如：      
+					@RequestMapping(value = "/receiveproperty.do")
+					public ModelAndView doSome(@RequestParam(value = "myname") String name, @RequestParam(value = "myage") Integer age){
+					    System.out.println("name="+name+",age="+age);
+						。。。。。。
+					}
+
+		2.对象接收
+			将处理器方法的参数定义为一个对象，只要保证请求参数名和这个对象的属性同名即可。
+			注意：形参中可以有多个对象作参数，框架都会创建它们的实例，互不干扰，例如：@RequestMapping(value = "/receiveObject.do")
+												  public ModelAndView doOther(Student student,School school){
+			例如：
+				请求传的参数：
+					    <p>使用java对象接收请求参数</p>
+					    <form action="receiveObject.do" method="get">
+						姓名：<input type="text" name="name"><br>
+						年龄：<input type="text" name="age"><br>
+						<input type="submit" value="提交参数">
+					    </form>
+				保存参数的类：
+					//保存请求参数值的一个普通类
+					public class Student {
+					    //属性名必须和请求中的参数名一样
+					    private String name;
+					    private Integer age;
+					    。。。。。。
+				处理器方法：
+					@RequestMapping(value = "/receiveObject.do")
+					public ModelAndView doOther(Student student){
+					。。。。。。
+
+			原理：框架会创建形参的java对象，并且给属性赋值。
+			      请求中的参数是name，那么框架就会调用setName()给对象的name属性赋值。
+
+	两种接收参数方式的优缺点：
+		当需要接收的参数比较少时，用逐个接收的方式更快捷方便，
+		当需要接收的参数比较多时，用对象接收的方式比较好，可以把需要接收的参数定义在类中。
+	
+
+7.过滤器
+	过滤器可以自己定义，也可以使用框架中提供的过滤器 CharacterEncodingFilter。
+	框架中提供的过滤器 CharacterEncodingFilter 的使用方式：
+		在web.xml文件中编写如下代码：
+			    <!-- 注册声明过滤器，解决乱码的问题 -->
+			    <filter>
+				<filter-name>characterEncodingFilter</filter-name>
+				<filter-class>org.springframework.web.filter.CharacterEncodingFilter</filter-class>
+				<!-- 设置项目中使用的字符编码 -->
+				<init-param>
+				    <param-name>encoding</param-name>
+				    <param-value>utf-8</param-value>
+				</init-param>
+				<!-- 强制请求对象（HttpServletRequest）使用encoding的编码方式 -->
+				<init-param>
+				    <param-name>forceRequestEncoding</param-name>
+				    <param-value>true</param-value>
+				</init-param>
+				<!-- 强制应答对象（HttpServletResponse）使用encoding的编码方式 -->
+				<init-param>
+				    <param-name>forceResponseEncoding</param-name>
+				    <param-value>true</param-value>
+				</init-param>
+			    </filter>
+			    <filter-mapping>
+				<filter-name>characterEncodingFilter</filter-name>
+				<url-pattern>/*</url-pattern>   <!-- /*：表示强制所有的请求先通过过滤器处理。 -->
+			    </filter-mapping>
+
+8.处理器方法的返回值（实例04）
+	处理器方法的返回值有4种：ModelAndView、String、void、Object。
+
+	1.ModelAndView
+		如果处理器方法处理完后，需要跳转到其他资源，且又要在跳转的资源间传递数据，此时处理器方法返回ModelAndView比较好。
+
+	2.String
+		- 处理器方法返回的字符串可以指定视图路径，框架会自动对这个视图执行forward转发操作。注意：此时不能配置视图解析器。
+		- 如果处理器方法返回的字符串指定逻辑视图名，通过视图解析器可以将其转换为视图地址，
+		  并且框架会自动对这个视图执行forward转发操作。注意：此时需要视图解析器。
+
+		如果只需要做视图跳转操作的话，处理器方法返回String比较好。
+		如果还想做添加数据操作的话，可以自己手工添加数据到request作用域。
+
+		处理器方法返回的字符串不仅返回视图，同时也可以当作数据来返回。
+		区分返回值String是数据还是视图：看有没有@ResponseBody注解，
+		如果有@ResponseBody注解，返回的String就是数据，反之就是视图。
+
+	3.void
+		不能表示数据，也不能表示视图。在处理ajax的时候，可以使用void返回值。
+		通过HttpServletResponse输出数据，响应ajax请求。
+
+	4.Object
+		处理器方法也可以返回Object对象。这个Object可以是Integer、String、自定义对象、Map、
+		List等。对象有属性，而属性就是数据，所以返回Object表示返回数据，和视图无关。
+		可以使用对象表示的数据，响应ajax请求。
+		返回对象，需要使用@ResponseBody注解，将转换后的json数据放入到响应体中。
+
+		现在做ajax，主要使用json的数据格式。实现步骤：
+		    1.加入处理json的工具库的依赖。
+		    2.在springmvc配置文件中加入 <mvc:annotation-driven> 注解驱动。作用是能够将处理器方法返回的对象转换成其他格式的数据。
+		    3.在处理器方法上面加入@ResponseBody注解，作用是在处理器方法返回的对象转换为json后，将其输出给浏览器并响应ajax请求。
+
+		springmvc处理器方法返回Object，可以转为json数据输出到浏览器，响应ajax请求的内部原理：
+			1.<mvc:annotation-driven> 注解驱动
+				注解驱动实现的功能是：完成java对象到json、xml、text、二进制等数据格式的转换。
+				<mvc:annotation-driven>在加入到springmvc配置文件后，会自动创建HttpMessageConverter接口
+				的7个实现类对象，这7个实现类分别对应7种数据格式。
+
+			2.@ResponseBody注解
+				作用：在处理器方法返回的对象转换为json后，通过HttpServletResponse输出给浏览器，响应ajax请求。
+				位置：方法的定义上面。和其他注解没有先后顺序的关系。
+
+9.springmvc的核心：中央调度器DispatcherServlet（实例05）
+	- DispatcherServlet叫做中央调度器，是一个servlet，他的父类继承HttpServlet
+        - DispatcherServlet也叫做前端控制器（front controller）
+        - DispatcherServlet负责接收用户提交的请求，调用其他的控制器对象，并把请求的处理结果显示给用户。
+
+	注册springmvc的核心对象DispatcherServlet
+            需要在tomcat服务器启动后就自动创建DispatcherServlet对象的实例。
+        为什么要创建DispatcherServlet对象的实例呢？
+            因为DispatcherServlet对象在创建过程中会同时创建springmvc容器对象，
+            读取springmvc的配置文件，把这个配置文件中的对象都创建好，当用户发起请求时就可以直接使用对象了。
+
+	如何使用：在web.xml文件中声明中央调度器这个servlet
+	    <!-- 注册springmvc的核心对象DispatcherServlet
+	    -->
+	    <servlet>
+		<servlet-name>myweb</servlet-name>
+		<servlet-class>org.springframework.web.servlet.DispatcherServlet</servlet-class>
+		<!-- 自定义springmvc读取的配置文件的位置 -->
+		<init-param>
+		    <!-- springmvc的配置文件的位置属性 -->
+		    <param-name>contextConfigLocation</param-name>
+		    <param-value>classpath:springmvc.xml</param-value>  <!-- 自定义文件的位置 -->
+		</init-param>
+		<load-on-startup>1</load-on-startup>
+	    </servlet>
+	    <servlet-mapping>
+		<servlet-name>myweb</servlet-name>
+		<url-pattern>*.do</url-pattern>
+	    </servlet-mapping>
+
+	    其中：
+		<servlet-name>:自定义的servlet名称。
+		<servlet-class>：指定org.springframework.web.servlet.DispatcherServlet
+		<init-param>：自定义springmvc读取的配置文件的位置，如不指定会读取默认的位置。
+			<param-name>：springmvc的配置文件的位置属性，指定填写contextConfigLocation
+			<param-value>：自定义文件所在的位置。
+                <load-on-startup>：表示tomcat启动后创建对象的顺序。它的值是一个>=0的整数，数值越小，tomcat创建对象的时间就越早。
+		<servlet-mapping>：
+			使用框架的时候，url-pattern可以使用两种值
+			1.使用扩展名方式，语法：*.xxxx，xxxx是自定义的扩展名。常用的方式：*.do、*.action、*.mvc等等
+				例如：http://localhost:8080/.../some.do   所有以".do"结尾的请求都交给这个servlet处理
+			2.使用斜杠"/"
+				如果你的项目中用了斜杠"/"，它会替代tomcat中的default。
+				就是表示所以静态资源和未映射到其他servlet的请求都交给DispatcherServlet这个servlet来处理。
+
+				在默认情况下，DispatcherServlet没有处理静态资源的能力，
+				没有控制器对象能处理静态资源的访问，所以静态资源（html、jsp、图片、css）都是404。
+
+				那么如何才能让DispatcherServlet拥有处理静态资源的能力呢？有两种方式
+				第一种：
+					需要在springmvc配置文件加入 <mvc:default-servlet-handler />
+					原理是：加入这个标签后，框架会创建控制器对象DefaultServletHttpRequestHandler，
+						这个对象可以把收到的请求转发给tomcat的 default这个servlet处理。这种方式依赖tomcat。
+					注意：  <mvc:default-servlet-handler />和@RequestMapping注解有冲突，
+						需要加入注解驱动 <mvc:annotation-driven />解决问题。否则控制器方法
+						将无法使用@RequestMapping注解。
+
+				第二种：
+					需要在springmvc配置文件中配置<mvc:resources />标签。这个标签专门用于解决静态资源
+					无法访问的问题。<mvc:resources />标签不是唯一的，可以有多个。
+					<mvc:resources />加入后框架会创建ResourceHttpRequestHandler这个处理器对象。
+					让这个对象处理静态资源的访问，不依赖tomcat服务器。
+					配置语法：
+						<mvc:resources location="" mapping=""/>
+						location：静态资源在你的项目中的目录位置。
+							 例如：/images/  第一个斜杠"/"代表webapp这个根目录，第二个斜杠代表这是一个目录。
+						mapping：访问静态资源的uri地址，使用通配符**。
+							 例如：/images/** 表示/images/baidu.png、/image/user/p1.jpg等image目录下的所有文件。
+					注意：  <mvc:resources />也和@RequestMapping注解有冲突，
+						需要加入注解驱动 <mvc:annotation-driven />解决问题。
+
+10.路径分类
+	1.相对路径
+		带有协议名称的是绝对路径，例如：http://www.baidu.com、ftp://202.122.23.1
+
+	2.绝对路径
+		没有协议开头的是相对路径，例如：user/some.do、/user/some.do
+		相对路径不能独立使用，必须有一个参考地址，通过参考地址+相对路径才能指定资源。
+
+	3.参考地址
+		假如你当前所在的页面为： http://localhost:8080/04_return/index.jsp
+			此时http://localhost:8080/04_return/index.jsp 可以解析为：
+			路径：http://localhost:8080/04_return/
+			资源：index.jsp
+		那么当你在index.jsp页面发起 user/some.do请求，访问地址变为 http://localhost:8080/04_return/user/some.do
+			也就是说当你发起的请求地址没有斜杠开头，例如 user/some.do，当你点击请求链接时，访问地址是当前页面的路径
+			加上请求链接的地址。
+			http://localhost:8080/04_return/ + user/some.do = http://localhost:8080/04_return/user/some.do
+		而 http://localhost:8080/04_return/ 这个路径就是参考地址。
+
+	4.如果在你的index.jsp页面中，发起的请求地址有斜杠开头
+		当前所在的页面为： http://localhost:8080/04_return/index.jsp
+		此时在页面中点击 /user/some.do 请求链接，访问地址变为： http://localhost:8080/user/some.do
+		参考地址从 http://localhost:8080/04_return/ 变为了 http://localhost:8080/
+		问题所在：地址中的项目名不见了。
+		如何解决？
+			我们可以在/user/some.do前加入 ${pageContext.request.contextPath}。
+			${pageContext.request.contextPath}相当于项目名。
+			例如：<a href="${pageContext.request.contextPath}/user/some.do"/> 等同于 <a href="${/04_return/user/some.do"/>
+
+	5.base标签
+		base标签是html语言中的标签，base标签中的地址表示当前页面中访问的地址的参考地址。
+		你的页面中所有没有以斜杠"/"开头的地址，都是以base标签中的地址作为参考地址。
+		使用base中的地址 + user/some.do = 访问地址
+
+		base标签的用法：
+			在<head>元素内部编写。
+			<base href=""/>  例如：<base href="http://localhost:8080/04_return/"/>
+
+11.ssm整合开发（实例06）
+	ssm：springmvc+spring+mybatis
+
+	springmvc：视图层，界面层，负责接收请求，显示处理结果。
+	spring：业务层，管理service、dao、工具类对象。
+	mybatis：持久层，访问数据库。
+
+	用户发起请求---springmvc接收请求---spring中的service对象处理请求---mybatis处理数据
+
+	SSM整合也叫做SSI（IBatis也就是mybatis的前身），整合中有容器。
+	1.第一个容器springmvc容器，管理Controller控制器对象。
+	2.第二个容器spring容器，管理service、dao、工具类对象。
+
+	springmvc容器和spring容器是有关系的，这个关系已经确定好了，
+	springmvc容器是spring容器的子容器。
+	在子容器中的Controller可以访问父容器中的Service对象，就可以实现controller使用service对象。
+
+	ssm数据库的url：jdbc:mysql://localhost:3306/ssm? useUnicode=true&amp;characterEncoding=utf8&amp;serverTimezone=GMT
+
+	实例的实现步骤：
+		1.使用ssm数据库，表使用student（id auto_increment,name,age）
+		    ssm数据库url：jdbc:mysql://localhost:3306/ssm? useUnicode=true&amp;characterEncoding=utf8&amp;serverTimezone=GMT
+		2.新建maven项目
+		3.加入依赖
+		    springmvc、spring、mybatis三个框架的依赖，jackson依赖、mysql驱动、druid连接池依赖、
+		    jsp依赖、servlet依赖
+
+		4.写web.xml文件
+		    1.注册DispatcherServlet，目的：1.会自动创建springmvc容器对象，有springmvc容器对象才能创建Controller对象。
+						   2.DispatcherServlet是Servlet，能接收用户请求。
+		    2.注册spring的监听器：ContextLoaderListener，目的：创建spring容器对象，才能创建service、dao对象。
+		    3.注册字符集过滤器filter，目的：解决post请求乱码的问题。
+
+		5.创建包：Controller包、service包、dao包、实体类包。
+
+		6.写配置文件
+		    - springmvc配置文件
+		    - spring配置文件
+		    - mybatis配置文件
+		    - 数据库的属性配置文件
+
+		7.写代码：dao接口和mapper文件、service和实现类、controller、实体类。
+		8.写jsp页面
+
+	实例的工作流程：
+		注册学生时：
+			index.jsp---addStudent.jsp---发起student/addStudent.do请求（Controller调用service的方法，service调用dao方法）---result.jsp显示处理结果
+
+12.在springmvc中使用转发和重定向（实例07）
+	SpringMVC框架把原来Servlet中的请求转发和重定向操作进行了封装，现在可以使用简单的方式实现转发和重定向。
+		forward：表示转发，实现request.getRequestDispatcher("xx.jsp").forward()
+		redirect:表示重定向，实现response.sendRedirect("xx.jsp")
+
+	转发：
+		语法：setViewName("forward:视图文件的完整路径")
+		特点：可以不受视图解析器的限制，转发到任意路径都行，路径必须写视图文件的完整路径
+		
+		例如：mv.setViewName("forward:/WEB-INF/view/show.jsp");
+		用处：这种转发方式是为了当你需要转发的视图不符合视图解析器条件时使用的。
+		      比如当你需要转发的视图不在/WEB-INF/view/目录下，就可以使用这种方式转发视图。
+
+	重定向：
+		语法：setViewName("redirect:视图完整路径")
+		特点：可以不受视图解析器的限制，转发到任意路径都行，路径必须写视图文件的完整路径
+		例如：mv.setViewName("redirect:/index.jsp");
+
+		框架对重定向的操作：
+			1.框架会把ModelAndView对象中的简单类型的数据转为string，并作为index.jsp的get请求参数使用。
+			  目的是为了在使用重定向进行两次请求的时候仍然能传递数据。
+
+13.集中统一处理异常(实例08)
+	springmvc框架采用的是统一的，全局的异常处理。
+	把Controller中的所有异常处理都集中到一个地方。采用的是aop的思想，把业务逻辑和异常处理代码分开，解耦合。
+
+	创建一个普通类作为全局异常处理类
+		- 在类的上面加入@ControllerAdvice
+		- 在类中定义方法，方法的上面加入@ExceptionHandler
+		  处理异常的方法和控制器方法的定义一样，可以有多个参数，可以有ModelAndView、
+		  String、void、对象类型的返回值。
+		  方法的参数之一：Exception，表示Controller中抛出的异常对象，通过该参数可以获得发生的异常信息。
+
+
+	1.@ExceptionHandler
+		使用位置：方法的上面加入。
+		用法有两种：
+			第一种：
+				@ExceptionHandler(value =异常的class)：表示异常的类型，当发生此类型异常时由当前方法处理。
+				例如：@ExceptionHandler(value = NameException.class) 当发生NameException异常时由该方法处理。
+			第二种：
+				@ExceptionHandler：表示处理其他异常。
+				（当发生的异常不属于任何一个 @ExceptionHandler(value =异常的class) 所指定的异常时，由该方法来处理异常。）
+
+	2.@ControllerAdvice
+		@ControllerAdvice：控制器增强（也就是说给控制器增加功能，现在增加的是异常处理功能）。
+		使用位置：类定义的上面。
+		特点：必须让框架知道这个注解所在的包名，需要在springmvc配置文件声明组件扫描器，指定注解所在的包名。
+
+	* 异常发生时的处理逻辑：
+         * 1.需要把异常记录下来，记录到数据库、日志文件等。
+         *   记录异常发生的时间，哪个方法发生的，异常错误内容。
+         * 2.发送通知，把异常的信息通过邮件、短信、微信发送给相关人员。
+         * 3.给用户友好的提示。
+
+	 注意：完成此项目的功能需要在springmvc配置文件中声明注解驱动 <mvc:annotation-driven />以及 声明另一个组件扫描器用来扫描@ControllerAdvice所在的包名。
+
+14.拦截器（实例09、10）
+	1.拦截器是springmvc中的一种对象，需要实现HandlerInterceptor接口。
+	  拦截器可以看作是多个Controller中公用的功能，集中到拦截器统一处理，使用了aop的思想。
+
+	2.拦截器和过滤器类似，但是功能方向侧重点不同。
+		- 过滤器是用来过滤请求参数，设置编码字符集等工作。
+		- 拦截器是用来拦截用户的请求，做请求判断处理的。
+	3.拦截器的特点：
+		- 拦截器是全局的，可以对多个Controller做拦截。
+		- 一个项目中可以有0个或多个拦截器，他们在一起拦截用户的请求。
+		- 拦截器常用在：用户的登录处理、权限检查、记录日志。
+
+	4.拦截器的使用步骤：
+		第一步：定义类实现HandlerInterceptor接口。
+		第二步：在springmvc配置文件中声明拦截器，让框架知道拦截器的存在。
+
+	5.拦截器的执行时间：
+		1.在请求处理之前，也就是Controller类中的方法执行之前先被拦截。
+		2.在控制器方法执行之后也会执行拦截器。
+		3.在请求处理完成后也会执行拦截器。框架中规定是当你的视图处理完成后，对视图执行了forward，就认为请求处理完成。
+
+	6.拦截器的三个方法：
+		1.preHandle方法：
+			* preHandle叫做预处理方法。
+			* 参数：
+			*      1.HttpServletRequest request，
+			*      2.HttpServletResponse response，
+			*      3.Object handler：被拦截的控制器对象。
+			* 返回值boolean：
+			*      1.true：表示请求通过拦截器的验证，可以放行。
+			*      2.false：表示请求没有通过拦截器验证，请求被拦截器截断了。
+			* 特点：
+			*      1.该方法在控制器方法之前先执行，用户的请求首先到达此方法。
+			*      2.在这个方法中可以获得请求的信息，验证请求是否符合要求。
+			*          可以验证用户是否登录，可以验证用户是否有权限去访问某个链接地址(url)。
+			*          如果验证失败，可以截断请求，请求不能被处理。
+			*          如果验证成功，可以放行请求，此时控制器方法才能执行。
+
+		2.postHandle方法：
+			     * postHandle：后处理方法
+			     * 参数：
+			     *      1.HttpServletRequest request,
+			     *      2.HttpServletResponse response,
+			     *      3.Object handler, ：被拦截的控制器对象。
+			     *      4.ModelAndView modelAndView：控制器方法的返回值。
+			     * 返回值：void
+			     * 特点：
+			     *      1.在控制器方法之后执行
+			     *      2.能过获取到控制器方法的的返回值ModelAndView，可以修改ModelAndView中的
+			     *        数据和视图，可以影响到最后的执行。
+			     *      3.主要的作用是对原来的执行结果做二次修正。
+
+		3.afterCompletion方法：
+			     * afterCompletion：最后执行的方法
+			     * 参数：
+			     *      1.HttpServletRequest request,
+			     *      2.HttpServletResponse response,
+			     *      3.Object handler,：被拦截的控制器对象。
+			     *      4.Exception e：程序中发生的异常
+			     * 返回值：void
+			     * 特点：
+			     *      1.在请求处理完成后执行。框架中规定是当你的视图处理完成后，对视图执行了forward，就认为请求处理完成。
+			     *      2.一般做资源回收工作，程序请求过程中创建了一些对象，在这里可以删除，把占用的内存回收。
+
+	7.拦截器的声明：
+		在springmvc配置文件中做以下声明：
+		    <!-- 声明拦截器 -->
+		    <mvc:interceptors>
+			<!-- 声明第一个拦截器 -->
+			<mvc:interceptor>
+			    <mvc:mapping path="/user/**"/>
+			    <bean class="com.bjpowernode.handler.MyInterceptor"/>
+			</mvc:interceptor>
+		    </mvc:interceptors>
+
+		    <mvc:mapping path=""/>：指定拦截的请求uri地址，** 是通配符表，表示任何的字符、文件或者多级目录和目录中的文件。
+		    <bean class=""/>：声明拦截器对象，com.bjpowernode.handler.MyInterceptor表示拦截器所在的全限定类名。
+
+	8.声明多个拦截器：
+		1.在框架中保存多个拦截器的是ArrayList，按照声明的先后顺序放入到ArrayList。
+		2.框架中多个拦截器的执行顺序是：
+			第一个拦截器preHandler=true，第二个拦截器preHandler=true，输出结果如下：
+				1111111-拦截器MyInterceptor的preHandler()
+				22222-拦截器MyInterceptor的preHandler()
+				doSome,name=小芳,age=16
+				22222-拦截器MyInterceptor的postHandle()
+				1111111-拦截器MyInterceptor的postHandle()
+				22222-拦截器MyInterceptor的afterCompletion()
+				1111111-拦截器MyInterceptor的afterCompletion()
+
+				可以看到，preHandler()是第一个拦截器先执行，而之后的postHandle()和afterCompletion()却是第二个拦截器先执行。
+
+				因此我们可以总结出：
+					对于preHandler()方法来讲：先声明的拦截器先执行。
+					对于postHandle()和afterCompletion()方法来讲：先声明的拦截器后执行。
+
+			第一个拦截器preHandler=true，第二个拦截器preHandler=false，输出结果如下：
+				1111111-拦截器MyInterceptor的preHandler()
+				22222-拦截器MyInterceptor的preHandler()
+				1111111-拦截器MyInterceptor的afterCompletion()
+
+				可以看到，因为第二个拦截器preHandler=false，所有请求被截断了，两个拦截器的postHandle()方法都没有执行。
+				可是为什么第一个拦截器的afterCompletion()方法执行了呢？
+				因为第一个拦截器的preHandler=true，所以第一个拦截器的afterCompletion()方法执行了。
+				
+				因此我们可以总结出：
+					只要拦截器的preHandler()方法执行了并返回true，那么这个拦截器的afterCompletion()方法就一定会执行。
+
+			第一个拦截器preHandler=false，第二个拦截器preHandler=true，输出结果如下：
+				1111111-拦截器MyInterceptor的preHandler()
+
+				因为第一个拦截器直接把请求给截断了，所有这个请求根本没有进入到第二个拦截器，
+				因此只有第一个拦截器的preHandler()执行了。
+
+15.拦截器和过滤器的区别
+	1.过滤器是servlet中的对象，拦截器是springmvc框架中的对象。
+	2.过滤器是实现Filter接口的对象，拦截器是实现HandlerInterceptor接口的对象。
+	3.过滤器是用来设置request、response的参数和属性的，侧重对数据的过滤，
+	  拦截器是用来验证请求的，能截断请求。
+	4.过滤器是在拦截器之前先执行的。
+	5.过滤器是tomcat服务器创建的对象，拦截器是springmvc容器中创建的对象。
+	6.过滤器只有一个执行时间点，拦截器有三个执行时间点。
+	7.过滤器可以处理jsp、js、html等等，
+	  拦截器是侧重拦截对Controller的对象，如果你的请求不能被DispatcherServlet接收，那么这个请求不会执行拦截器内容。
+
+16.登录验证拦截器项目（实例11）
+
+17.springmvc内部请求的处理流程，也就是springmvc接收请求，到处理完成的过程（面试可能考）
+	1.用户发起请求some.do
+	2.DispatcherServlet接收请求some.do，把请求转交给处理映射器
+		处理映射器：springmvc框架中的一种对象，框架把实现了HandlerMapping接口的类都叫做映射器（一个项目可以有多个）
+		处理映射器的作用：根据请求，从springmvc容器对象中获取处理器对象（相当于：MyController controller=application.getBean("some.do")）
+				  框架把找到的处理器对象放到一个叫做处理器执行链（HandlerExecutionChain）的类中保存。
+		HandlerExecutionChain：类中保存着：1.处理器对象； 2.项目中所有的拦截器（List<HandlerInterceptor>）
+	
+	3.DispatcherServlet把HandlerExecutionChain中的处理器对象交给了处理器适配器对象（一个项目可以有多个）
+		处理器适配器：springmvc框架中的对象，需要实现HandlerAdapter接口。
+		处理器适配器的作用：执行处理器方法（相当于调用MyController.doSome() 得到返回值ModelAndView）
+
+	4.DispatcherServlet把3步骤中获取的ModelAndView交给了视图解析器对象。
+		视图解析器：springmvc中的对象，需要实现ViewResoler接口。
+		视图解析器的作用：组成视图的完整路径，并创建View对象。
+			View是一个接口，框架使用View和它的实现类表示视图。
+	
+	5.DispatcherServlet把4步骤中创建的View对象获取到，调用View类自己的方法，把Model数据放入到request作用域，
+	  执行对视图的forward，请求结束。
+
+			
+		
+
+
+	
+		     
+
+		
+
+
+		
+					
+	
+		 
+	
+		
